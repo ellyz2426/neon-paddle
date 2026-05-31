@@ -1,0 +1,6 @@
+<panel>
+  <vertical alignment="center">
+    <text id="cam-mode" font-size="11" color="#00ffff" alignment="center">DEFAULT</text>
+    <text id="cam-hint" font-size="9" color="#555555" alignment="center">[1-5] Camera</text>
+  </vertical>
+</panel>

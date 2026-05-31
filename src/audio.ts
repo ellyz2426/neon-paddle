@@ -418,4 +418,101 @@ export class AudioManager {
     osc.start();
     osc.stop(ctx.currentTime + 0.35);
   }
+
+  // === ROUND 4: REPLAY SOUNDS ===
+  playReplayStart() {
+    this.ensureCtx();
+    const ctx = this.ctx!;
+    // Rewinding tape effect — descending chirp
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(2000, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.4);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.08, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.connect(g);
+    g.connect(this.sfxGain!);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.5);
+    // Film reel click
+    setTimeout(() => {
+      this.playTone(400, 'square', 0.02, 0.1);
+      setTimeout(() => this.playTone(400, 'square', 0.02, 0.1), 60);
+      setTimeout(() => this.playTone(400, 'square', 0.02, 0.1), 120);
+    }, 200);
+  }
+
+  playReplayEnd() {
+    this.ensureCtx();
+    const ctx = this.ctx!;
+    // Speed-up chirp back to normal
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(200, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.2);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.1, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    osc.connect(g);
+    g.connect(this.sfxGain!);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.25);
+  }
+
+  // Commentary cue — subtle chime before text appears
+  playCommentaryCue() {
+    this.playTone(1200, 'sine', 0.06, 0.08);
+    setTimeout(() => this.playTone(1500, 'sine', 0.04, 0.06), 60);
+  }
+
+  // Dramatic point — impactful bass hit for crucial scores
+  playDramaticPoint() {
+    this.ensureCtx();
+    const ctx = this.ctx!;
+    // Bass impact
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(80, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.5);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.25, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+    osc.connect(g);
+    g.connect(this.sfxGain!);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.6);
+    // High shimmer
+    this.playTone(2400, 'sine', 0.3, 0.06);
+    this.playNoise(0.15, 0.04, 1000);
+  }
+
+  // Camera switch sound
+  playCameraSwitch() {
+    this.playTone(800, 'sine', 0.04, 0.08);
+    this.playTone(1200, 'sine', 0.03, 0.06);
+  }
+
+  // Drop shot — soft delicate sound
+  playDropShot() {
+    this.playTone(1800, 'sine', 0.03, 0.1);
+    this.playTone(2200, 'triangle', 0.02, 0.06);
+  }
+
+  // Lob — rising whoosh
+  playLob() {
+    this.ensureCtx();
+    const ctx = this.ctx!;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(300, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(900, ctx.currentTime + 0.25);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.08, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.connect(g);
+    g.connect(this.sfxGain!);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  }
 }

@@ -1,11 +1,78 @@
 // Neon Paddle VR — Types, constants, themes, achievements, state management
 import { Vector3 } from '@iwsdk/core';
 
+// === REPLAY SYSTEM ===
+export interface ReplayFrame {
+  time: number;
+  ballPos: [number, number, number];
+  ballVel: [number, number, number];
+  playerPos: [number, number, number];
+  aiPos: [number, number, number];
+  ballActive: boolean;
+}
+
+export const REPLAY_BUFFER_SECONDS = 5;
+export const REPLAY_FPS = 30;
+
+// === CAMERA MODES ===
+export type CameraMode = 'default' | 'overhead' | 'side' | 'cinematic' | 'ball_follow';
+
+export const CAMERA_MODES: { id: CameraMode; name: string; description: string }[] = [
+  { id: 'default', name: 'DEFAULT', description: 'Standard player view' },
+  { id: 'overhead', name: 'OVERHEAD', description: 'Birds-eye view of table' },
+  { id: 'side', name: 'SIDE VIEW', description: 'TV broadcast angle' },
+  { id: 'cinematic', name: 'CINEMATIC', description: 'Dynamic tracking camera' },
+  { id: 'ball_follow', name: 'BALL CAM', description: 'Follow the ball' },
+];
+
+// === AI SHOT TYPES ===
+export type AIShot = 'drive' | 'topspin' | 'lob' | 'drop' | 'cross_court' | 'smash';
+
+export interface AIShotConfig {
+  type: AIShot;
+  weight: number; // selection probability weight
+  speedMult: number;
+  heightMult: number;
+  spinMult: number;
+  aimSpread: number;
+}
+
+export const AI_SHOTS: AIShotConfig[] = [
+  { type: 'drive', weight: 3, speedMult: 1.0, heightMult: 1.0, spinMult: 1.0, aimSpread: 0.8 },
+  { type: 'topspin', weight: 2.5, speedMult: 0.9, heightMult: 1.3, spinMult: 2.0, aimSpread: 0.6 },
+  { type: 'lob', weight: 1, speedMult: 0.5, heightMult: 3.0, spinMult: 0.3, aimSpread: 0.4 },
+  { type: 'drop', weight: 1.5, speedMult: 0.4, heightMult: 0.6, spinMult: 0.5, aimSpread: 0.3 },
+  { type: 'cross_court', weight: 2, speedMult: 1.1, heightMult: 0.8, spinMult: 1.5, aimSpread: 2.0 },
+  { type: 'smash', weight: 0.8, speedMult: 1.8, heightMult: 0.5, spinMult: 0.8, aimSpread: 1.0 },
+];
+
+// === COMMENTARY SYSTEM ===
+export interface CommentaryLine {
+  trigger: string;
+  lines: string[];
+}
+
+export const COMMENTARY: CommentaryLine[] = [
+  { trigger: 'ace', lines: ['UNSTOPPABLE serve!', 'An ace! Incredible!', 'Pure power on that serve!', 'No chance of return!'] },
+  { trigger: 'smash', lines: ['THUNDEROUS smash!', 'What a shot!', 'Absolutely crushed it!', 'No defense for that!'] },
+  { trigger: 'rally_long', lines: ['What a rally!', 'Neither side giving in!', 'Incredible exchange!', 'Edge of your seat!'] },
+  { trigger: 'comeback', lines: ['What a comeback!', 'Never say never!', 'Against all odds!', 'Turned the tide!'] },
+  { trigger: 'streak', lines: ['On a roll!', 'Dominant form!', 'Relentless pressure!', 'Unstoppable!'] },
+  { trigger: 'edge_hit', lines: ['Off the edge!', 'Lucky break!', 'Clipped the edge!', 'Fortunate bounce!'] },
+  { trigger: 'net_roller', lines: ['Over the net by a hair!', 'Net roller! Drama!', 'Scraped the net!', 'Heart-stopping net!'] },
+  { trigger: 'deuce', lines: ['All square!', 'Dead heat!', 'Anyone\'s game!', 'Neck and neck!'] },
+  { trigger: 'match_point', lines: ['Match point!', 'One point away!', 'The pressure is ON!', 'Moment of truth!'] },
+  { trigger: 'game_start', lines: ['Let\'s go!', 'Game on!', 'Here we go!', 'Ready to rumble!'] },
+  { trigger: 'drop_shot', lines: ['Delicate drop shot!', 'Soft touch!', 'Barely over the net!', 'Feathered it!'] },
+  { trigger: 'lob', lines: ['High lob!', 'Arcing over!', 'Sky-high return!', 'Defensive lob!'] },
+  { trigger: 'cross_court', lines: ['Wide cross-court!', 'Angled beautifully!', 'Stretching the opponent!', 'Sharp angle!'] },
+];
+
 // === GAME STATES ===
 export type GameState = 'title' | 'modeselect' | 'difficulty' | 'playing' | 'paused' | 'gameover'
   | 'leaderboard' | 'achievements' | 'settings' | 'help' | 'stats' | 'countdown'
   | 'serve_practice' | 'rally_practice' | 'tournament' | 'tournament_bracket'
-  | 'drills' | 'drill_active' | 'daily_challenge' | 'tutorial';
+  | 'drills' | 'drill_active' | 'daily_challenge' | 'tutorial' | 'replay';
 
 // === DAILY CHALLENGE MODIFIERS ===
 export interface DailyModifier {
@@ -233,6 +300,15 @@ export function getDefaultAchievements(): Achievement[] {
     { id: 'wind_master', name: 'Wind Master', description: 'Win a wind challenge', unlocked: false },
     // Ghost
     { id: 'ghost_win', name: 'Ghost Buster', description: 'Win with ghost ball', unlocked: false },
+    // Round 4: Advanced achievements (8)
+    { id: 'drop_shot_ace', name: 'Soft Touch', description: 'Win point after a drop shot', unlocked: false },
+    { id: 'lob_winner', name: 'Sky High', description: 'Win point on a lob return', unlocked: false },
+    { id: 'perfect_game', name: 'Flawless', description: 'Win a match without losing a set', unlocked: false },
+    { id: 'triple_ace', name: 'Triple Threat', description: '3 aces in a row', unlocked: false },
+    { id: 'rally_comeback', name: 'Never Give Up', description: 'Win a 15+ hit rally after trailing', unlocked: false },
+    { id: 'speed_100', name: 'Sonic', description: '100+ hits in Speed Rally', unlocked: false },
+    { id: 'all_drills', name: 'Scholar', description: 'Complete all 4 drills', unlocked: false },
+    { id: 'win_streak_5', name: 'Winning Streak', description: 'Win 5 consecutive matches', unlocked: false },
   ];
 }
 
@@ -330,6 +406,32 @@ export class GameStateManager {
   // Tutorial
   tutorialStep: number = 0;
 
+  // Round 4: Replay system
+  replayBuffer: ReplayFrame[] = [];
+  replayMaxFrames: number = REPLAY_BUFFER_SECONDS * REPLAY_FPS;
+  replayPlaying: boolean = false;
+  replayIndex: number = 0;
+  replayTimer: number = 0;
+  replaySpeed: number = 0.5; // half-speed replay
+
+  // Round 4: Camera system
+  cameraMode: CameraMode = 'default';
+  cameraModeBeforeReplay: CameraMode = 'default';
+
+  // Round 4: Commentary
+  lastCommentary: string = '';
+  commentaryTimer: number = 0;
+
+  // Round 4: Screen flash
+  screenFlashIntensity: number = 0;
+  screenFlashColor: number = 0xffffff;
+
+  // Round 4: Advanced AI
+  aiLastShot: AIShot = 'drive';
+  consecutiveAces: number = 0;
+  drillsCompleted: Set<string> = new Set();
+  winStreak: number = 0;
+
   achievements: Achievement[] = getDefaultAchievements();
   leaderboard: { score: string; mode: string; difficulty: string; date: string }[] = [];
 
@@ -364,6 +466,8 @@ export class GameStateManager {
           }
         }
         if (data.leaderboard) this.leaderboard = data.leaderboard;
+        if (data.drillsCompleted) this.drillsCompleted = new Set(data.drillsCompleted);
+        this.winStreak = data.winStreak ?? 0;
       }
     } catch { /* ignore */ }
   }
@@ -388,6 +492,8 @@ export class GameStateManager {
         skinsUsed: [...this.skinsUsed],
         achievements: this.achievements.map(a => ({ id: a.id, unlocked: a.unlocked })),
         leaderboard: this.leaderboard.slice(0, 20),
+        drillsCompleted: [...this.drillsCompleted],
+        winStreak: this.winStreak,
       }));
     } catch { /* ignore */ }
   }
@@ -416,6 +522,13 @@ export class GameStateManager {
     this.shakeIntensity = 0;
     this.shakeTimer = 0;
     this.edgeHitsThisMatch = 0;
+    // Round 4
+    this.replayBuffer = [];
+    this.replayPlaying = false;
+    this.replayIndex = 0;
+    this.consecutiveAces = 0;
+    this.aiLastShot = 'drive';
+    this.screenFlashIntensity = 0;
   }
 
   getTheme(): Theme {
@@ -532,5 +645,89 @@ export class GameStateManager {
 
   wonTournament(): boolean {
     return this.tournamentResults.every(r => r.won === true);
+  }
+
+  // Round 4: Replay system
+  recordReplayFrame(ballPos: Vector3, ballVel: Vector3, playerPos: Vector3, aiPos: Vector3, ballActive: boolean) {
+    this.replayBuffer.push({
+      time: performance.now() / 1000,
+      ballPos: [ballPos.x, ballPos.y, ballPos.z],
+      ballVel: [ballVel.x, ballVel.y, ballVel.z],
+      playerPos: [playerPos.x, playerPos.y, playerPos.z],
+      aiPos: [aiPos.x, aiPos.y, aiPos.z],
+      ballActive,
+    });
+    if (this.replayBuffer.length > this.replayMaxFrames) {
+      this.replayBuffer.shift();
+    }
+  }
+
+  startReplay() {
+    if (this.replayBuffer.length < 10) return false;
+    this.replayPlaying = true;
+    this.replayIndex = 0;
+    this.replayTimer = 0;
+    this.cameraModeBeforeReplay = this.cameraMode;
+    this.cameraMode = 'cinematic';
+    return true;
+  }
+
+  stopReplay() {
+    this.replayPlaying = false;
+    this.cameraMode = this.cameraModeBeforeReplay;
+  }
+
+  getReplayFrame(): ReplayFrame | null {
+    if (!this.replayPlaying || this.replayIndex >= this.replayBuffer.length) return null;
+    return this.replayBuffer[this.replayIndex];
+  }
+
+  advanceReplay(dt: number): boolean {
+    this.replayTimer += dt;
+    const frameTime = 1 / (REPLAY_FPS * this.replaySpeed);
+    while (this.replayTimer >= frameTime && this.replayIndex < this.replayBuffer.length - 1) {
+      this.replayTimer -= frameTime;
+      this.replayIndex++;
+    }
+    return this.replayIndex < this.replayBuffer.length - 1;
+  }
+
+  // Round 4: AI shot selection based on difficulty and situation
+  selectAIShot(difficulty: number, ballHeight: number, isCounterAttack: boolean): AIShotConfig {
+    const shots = AI_SHOTS.filter(s => {
+      // Only allow smash when ball is elevated
+      if (s.type === 'smash' && ballHeight < 0.3) return false;
+      // Drop shots more likely at higher difficulty
+      if (s.type === 'drop' && difficulty < 1 && Math.random() > 0.3) return false;
+      // Lobs are defensive — more common when under pressure
+      if (s.type === 'lob' && !isCounterAttack && Math.random() > 0.4) return false;
+      return true;
+    });
+    // Weight-based random selection
+    const totalWeight = shots.reduce((sum, s) => sum + s.weight * (1 + difficulty * 0.3), 0);
+    let r = Math.random() * totalWeight;
+    for (const shot of shots) {
+      r -= shot.weight * (1 + difficulty * 0.3);
+      if (r <= 0) {
+        this.aiLastShot = shot.type;
+        return shot;
+      }
+    }
+    this.aiLastShot = shots[0].type;
+    return shots[0];
+  }
+
+  // Round 4: Commentary
+  getCommentary(trigger: string): string {
+    const entry = COMMENTARY.find(c => c.trigger === trigger);
+    if (!entry) return '';
+    const line = entry.lines[Math.floor(Math.random() * entry.lines.length)];
+    // Avoid repeating the same line
+    if (line === this.lastCommentary) {
+      const alt = entry.lines.find(l => l !== line);
+      if (alt) { this.lastCommentary = alt; return alt; }
+    }
+    this.lastCommentary = line;
+    return line;
   }
 }

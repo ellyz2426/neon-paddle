@@ -1,0 +1,7 @@
+<panel>
+  <vertical alignment="center">
+    <text id="replay-label" font-size="24" color="#ff3333" alignment="center">⏪ INSTANT REPLAY</text>
+    <text id="replay-progress" font-size="14" color="#aaaaaa" alignment="center">Playing...</text>
+    <text id="replay-speed" font-size="12" color="#666666" alignment="center">0.5x Speed</text>
+  </vertical>
+</panel>

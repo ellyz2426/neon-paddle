@@ -8,12 +8,13 @@ import {
   BufferGeometry, Float32BufferAttribute,
   PanelUI, ScreenSpace, Follower, FollowBehavior, PanelDocument, UIKitDocument,
 } from '@iwsdk/core';
-import type { GameState, TournamentRound } from './types.js';
+import type { GameState, TournamentRound, CameraMode, AIShotConfig } from './types.js';
 import {
   GameStateManager, BallState, TABLE_LENGTH, TABLE_WIDTH, TABLE_HEIGHT,
   NET_HEIGHT, BALL_RADIUS, PADDLE_RADIUS, PADDLE_THICKNESS, TABLE_EDGE_WIDTH,
   THEMES, DIFFICULTIES, GAME_MODES, PADDLE_SKINS, DRILLS,
   TOURNAMENT_BRACKET, getDailyModifiers, TUTORIAL_STEPS, DailyModifier,
+  CAMERA_MODES, AI_SHOTS, REPLAY_FPS,
 } from './types.js';
 import { AudioManager } from './audio.js';
 
@@ -115,6 +116,29 @@ let windParticles: { mesh: Mesh; vel: Vector3; life: number }[] = [];
 // Ghost ball opacity tracking
 let ghostBallOpacity = 1.0;
 
+// Round 4: Screen flash mesh
+let screenFlashMesh: Mesh | null = null;
+
+// Round 4: Commentary timer
+let commentaryTimer = 0;
+let commentaryVisible = false;
+
+// Round 4: Replay auto-trigger tracking
+let replayTriggerPending = false;
+let replayPendingDelay = 0;
+
+// Round 4: Particle pool for performance
+const particlePool: Mesh[] = [];
+const MAX_POOL_SIZE = 150;
+
+// Round 4: Camera smoothing
+let cameraTargetPos = new Vector3(0, 1.6, 2.0);
+let cameraTargetLookAt = new Vector3(0, TABLE_HEIGHT, 0);
+let cameraSmoothPos = new Vector3(0, 1.6, 2.0);
+
+// Round 4: Consecutive aces for achievement
+let consecutiveAcesInRow = 0;
+
 // === ENTRY ===
 async function main() {
   const container = document.getElementById('app') as HTMLDivElement;
@@ -146,6 +170,7 @@ async function main() {
   createSpinVisualization();
   createTrail();
   createPowerGlow();
+  createScreenFlash();
   setupUI();
   showUI('title');
 
@@ -543,6 +568,65 @@ function createPowerGlow() {
   playerPaddle.add(powerGlowMesh);
 }
 
+// === SCREEN FLASH (Round 4) ===
+function createScreenFlash() {
+  const geo = new PlaneGeometry(10, 10);
+  const mat = new MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.0,
+    blending: AdditiveBlending,
+    depthTest: false,
+    depthWrite: false,
+  });
+  screenFlashMesh = new Mesh(geo, mat);
+  // Place it close to camera, always visible
+  screenFlashMesh.position.set(0, 1.6, -1.0);
+  screenFlashMesh.renderOrder = 999;
+  world.scene.add(screenFlashMesh);
+}
+
+function triggerScreenFlash(color: number = 0xffffff, intensity: number = 0.6) {
+  gsm.screenFlashIntensity = intensity;
+  gsm.screenFlashColor = color;
+  if (screenFlashMesh) {
+    (screenFlashMesh.material as MeshBasicMaterial).color.set(color);
+    (screenFlashMesh.material as MeshBasicMaterial).opacity = intensity;
+  }
+}
+
+function updateScreenFlash(dt: number) {
+  if (gsm.screenFlashIntensity > 0 && screenFlashMesh) {
+    gsm.screenFlashIntensity = Math.max(0, gsm.screenFlashIntensity - dt * 3);
+    (screenFlashMesh.material as MeshBasicMaterial).opacity = gsm.screenFlashIntensity;
+  }
+}
+
+// === PARTICLE POOL (Round 4) ===
+function getPooledParticle(color: number): Mesh {
+  if (particlePool.length > 0) {
+    const mesh = particlePool.pop()!;
+    (mesh.material as MeshBasicMaterial).color.set(color);
+    (mesh.material as MeshBasicMaterial).opacity = 0.8;
+    mesh.visible = true;
+    return mesh;
+  }
+  const geo = new SphereGeometry(0.008, 4, 4);
+  const mat = new MeshBasicMaterial({ color, transparent: true, opacity: 0.8, blending: AdditiveBlending });
+  const mesh = new Mesh(geo, mat);
+  world.scene.add(mesh);
+  return mesh;
+}
+
+function returnToPool(mesh: Mesh) {
+  mesh.visible = false;
+  if (particlePool.length < MAX_POOL_SIZE) {
+    particlePool.push(mesh);
+  } else {
+    world.scene.remove(mesh);
+  }
+}
+
 // === UI SETUP ===
 function setupUI() {
   const panels = [
@@ -572,6 +656,12 @@ function setupUI() {
     { name: 'tutorial', config: '/ui/tutorial.json', maxWidth: 0.65, maxHeight: 0.6, pos: [0, TABLE_HEIGHT + 0.7, -0.4], type: 'world' },
     // Wind indicator
     { name: 'windind', config: '/ui/windind.json', maxWidth: 0.15, maxHeight: 0.06, type: 'follower', offset: [0.25, -0.1, -0.5] },
+    // Round 4: Replay overlay
+    { name: 'replay', config: '/ui/replay.json', maxWidth: 0.35, maxHeight: 0.12, type: 'follower', offset: [0, 0.2, -0.5] },
+    // Round 4: Camera mode indicator
+    { name: 'camera', config: '/ui/camera.json', maxWidth: 0.15, maxHeight: 0.06, type: 'follower', offset: [-0.25, 0.18, -0.5] },
+    // Round 4: Commentary
+    { name: 'commentary', config: '/ui/commentary.json', maxWidth: 0.4, maxHeight: 0.06, type: 'follower', offset: [0, -0.18, -0.5] },
   ];
 
   panels.forEach(p => {
@@ -614,7 +704,7 @@ function showUI(state: GameState) {
     'title', 'modeselect', 'difficulty', 'hud', 'servebar', 'toast', 'countdown',
     'pause', 'gameover', 'leaderboard', 'achievements', 'settings', 'help', 'stats',
     'tournament_bracket', 'drills', 'drillhud', 'rallycounter', 'matchpoint',
-    'daily', 'tutorial', 'windind',
+    'daily', 'tutorial', 'windind', 'replay', 'camera', 'commentary',
   ];
 
   allPanels.forEach(name => {
@@ -627,7 +717,7 @@ function showUI(state: GameState) {
     case 'title': showPanels.push('title'); break;
     case 'modeselect': showPanels.push('modeselect'); break;
     case 'difficulty': showPanels.push('difficulty'); break;
-    case 'playing': showPanels.push('hud'); break;
+    case 'playing': showPanels.push('hud', 'camera'); break;
     case 'paused': showPanels.push('pause', 'hud'); break;
     case 'gameover': showPanels.push('gameover'); break;
     case 'leaderboard': showPanels.push('leaderboard'); break;
@@ -951,6 +1041,7 @@ function finishCountdown() {
   audio.playGameStart();
   showUI('playing');
   gameTime = 0;
+  showCommentary('game_start');
   serveBall();
 }
 
@@ -1076,6 +1167,9 @@ function updateDrill(dt: number) {
     const passed = gsm.drillScore >= drill.targetScore;
     if (passed) {
       gsm.unlockAchievement('drill_complete');
+      gsm.drillsCompleted.add(gsm.currentDrill);
+      if (gsm.drillsCompleted.size >= DRILLS.length) gsm.unlockAchievement('all_drills');
+      gsm.savePersistence();
       audio.playDrillComplete();
       showToast(`DRILL COMPLETE! ${gsm.drillScore}/${drill.targetScore}`);
     } else {
@@ -1200,6 +1294,13 @@ function endGame() {
       gsm.unlockAchievement('perfect_set');
     }
     if (gsm.maxTrailingDeficit >= 5) gsm.unlockAchievement('comeback');
+    // Round 4: Perfect game (match mode, no sets lost)
+    if (gsm.mode === 'match' && gsm.aiSets === 0) gsm.unlockAchievement('perfect_game');
+    // Round 4: Win streak
+    gsm.winStreak++;
+    if (gsm.winStreak >= 5) gsm.unlockAchievement('win_streak_5');
+  } else {
+    gsm.winStreak = 0;
   }
   if (gsm.gamesPlayed >= 10) gsm.unlockAchievement('games10');
   if (gsm.gamesPlayed >= 25) gsm.unlockAchievement('games25');
@@ -1262,11 +1363,8 @@ function showToast(text: string, duration: number = 2.0) {
 // === PARTICLES ===
 function spawnParticles(pos: Vector3, color: number, count: number = 10) {
   for (let i = 0; i < count && particles.length < MAX_PARTICLES; i++) {
-    const geo = new SphereGeometry(0.008, 4, 4);
-    const mat = new MeshBasicMaterial({ color, transparent: true, opacity: 0.8, blending: AdditiveBlending });
-    const mesh = new Mesh(geo, mat);
+    const mesh = getPooledParticle(color);
     mesh.position.copy(pos);
-    world.scene.add(mesh);
     const vel = new Vector3(
       (Math.random() - 0.5) * 2,
       Math.random() * 2 + 0.5,
@@ -1322,6 +1420,162 @@ function updateSlowMo(dt: number) {
   }
 }
 
+// === ROUND 4: COMMENTARY SYSTEM ===
+function showCommentary(trigger: string) {
+  const text = gsm.getCommentary(trigger);
+  if (!text) return;
+  const entity = uiEntities.get('commentary');
+  if (entity && entity.object3D) entity.object3D.visible = true;
+  const doc = getDoc('commentary');
+  setText(doc, 'commentary-text', text);
+  commentaryTimer = 2.5;
+  commentaryVisible = true;
+  audio.playCommentaryCue();
+}
+
+function updateCommentary(dt: number) {
+  if (commentaryVisible) {
+    commentaryTimer -= dt;
+    if (commentaryTimer <= 0) {
+      commentaryVisible = false;
+      const entity = uiEntities.get('commentary');
+      if (entity && entity.object3D) entity.object3D.visible = false;
+    }
+  }
+}
+
+// === ROUND 4: CAMERA SYSTEM ===
+function setCameraMode(mode: CameraMode) {
+  gsm.cameraMode = mode;
+  audio.playCameraSwitch();
+  const doc = getDoc('camera');
+  const modeInfo = CAMERA_MODES.find(m => m.id === mode);
+  setText(doc, 'cam-mode', modeInfo?.name ?? 'DEFAULT');
+}
+
+function updateCamera(dt: number) {
+  // Calculate target camera position based on mode
+  const mode = gsm.cameraMode;
+  if (mode === 'default') return; // No camera override for default mode
+
+  switch (mode) {
+    case 'overhead':
+      cameraTargetPos.set(0, 4.0, 0.3);
+      cameraTargetLookAt.set(0, TABLE_HEIGHT, 0);
+      break;
+    case 'side':
+      cameraTargetPos.set(TABLE_WIDTH + 1.5, 1.5, 0);
+      cameraTargetLookAt.set(0, TABLE_HEIGHT + 0.1, 0);
+      break;
+    case 'cinematic': {
+      // Orbiting camera that follows the action
+      const t = performance.now() / 1000;
+      const angle = t * 0.15; // slow orbit
+      const radius = 3.0;
+      cameraTargetPos.set(
+        Math.cos(angle) * radius,
+        1.8 + Math.sin(t * 0.3) * 0.3,
+        Math.sin(angle) * radius
+      );
+      cameraTargetLookAt.set(
+        ball.active ? ball.position.x * 0.5 : 0,
+        TABLE_HEIGHT + 0.1,
+        ball.active ? ball.position.z * 0.3 : 0
+      );
+      break;
+    }
+    case 'ball_follow':
+      if (ball.active) {
+        const bDir = ball.velocity.clone().normalize();
+        cameraTargetPos.set(
+          ball.position.x - bDir.x * 0.8,
+          ball.position.y + 0.5,
+          ball.position.z - bDir.z * 0.8 + 0.3
+        );
+        cameraTargetLookAt.copy(ball.position);
+      } else {
+        cameraTargetPos.set(0, 1.6, 2.0);
+        cameraTargetLookAt.set(0, TABLE_HEIGHT, 0);
+      }
+      break;
+  }
+
+  // Smooth camera movement
+  const speed = 3.0 * dt;
+  cameraSmoothPos.lerp(cameraTargetPos, Math.min(speed, 1));
+
+  // Apply camera position
+  const cam = (world as any).camera;
+  if (cam) {
+    cam.position.lerp(cameraTargetPos, Math.min(speed, 1));
+    cam.lookAt(cameraTargetLookAt.x, cameraTargetLookAt.y, cameraTargetLookAt.z);
+  }
+}
+
+// === ROUND 4: REPLAY SYSTEM ===
+function triggerReplay() {
+  if (gsm.replayBuffer.length < 30) return; // Need at least 1 second of data
+  if (gsm.startReplay()) {
+    audio.playReplayStart();
+    const entity = uiEntities.get('replay');
+    if (entity && entity.object3D) entity.object3D.visible = true;
+    // Store the playing state; we'll pause gameplay during replay
+    replayTriggerPending = false;
+  }
+}
+
+function updateReplay(dt: number) {
+  if (!gsm.replayPlaying) {
+    // Check for pending replay trigger
+    if (replayTriggerPending) {
+      replayPendingDelay -= dt;
+      if (replayPendingDelay <= 0) {
+        triggerReplay();
+      }
+    }
+    return;
+  }
+
+  // Advance replay
+  const stillPlaying = gsm.advanceReplay(dt);
+  const frame = gsm.getReplayFrame();
+
+  if (frame && stillPlaying) {
+    // Move objects to replay positions
+    ballMesh.position.set(frame.ballPos[0], frame.ballPos[1], frame.ballPos[2]);
+    ballMesh.visible = frame.ballActive;
+    playerPaddle.position.set(frame.playerPos[0], frame.playerPos[1], frame.playerPos[2]);
+    aiPaddle.position.set(frame.aiPos[0], frame.aiPos[1], frame.aiPos[2]);
+
+    // Update replay progress UI
+    const doc = getDoc('replay');
+    const pct = Math.round((gsm.replayIndex / gsm.replayBuffer.length) * 100);
+    setText(doc, 'replay-progress', `${pct}%`);
+  } else {
+    // Replay finished
+    endReplay();
+  }
+}
+
+function endReplay() {
+  gsm.stopReplay();
+  audio.playReplayEnd();
+  const entity = uiEntities.get('replay');
+  if (entity && entity.object3D) entity.object3D.visible = false;
+
+  // Restore actual positions
+  playerPaddle.position.copy(playerPaddlePos);
+  aiPaddle.position.copy(aiPaddlePos);
+  if (ball.active) {
+    ballMesh.position.copy(ball.position);
+  }
+}
+
+function scheduleReplay(delay: number = 0.5) {
+  replayTriggerPending = true;
+  replayPendingDelay = delay;
+}
+
 // === MAIN UPDATE ===
 function update(dt: number) {
   dt = Math.min(dt, 0.05);
@@ -1330,6 +1584,23 @@ function update(dt: number) {
   const realDt = dt;
   updateSlowMo(realDt);
   const gameDt = dt * slowMoTimeScale;
+
+  // Round 4: Replay playback (pauses normal game)
+  if (gsm.replayPlaying) {
+    updateReplay(realDt);
+    // Still animate environment during replay
+    const time = performance.now() / 1000;
+    envDecorations.forEach(d => {
+      d.mesh.rotation.y += d.rotSpeed * realDt;
+      d.mesh.position.y = d.baseY + Math.sin(time * 0.5 + d.rotSpeed) * 0.2;
+    });
+    updateCamera(realDt);
+    updateScreenFlash(realDt);
+    return;
+  }
+
+  // Round 4: Check for pending replay
+  updateReplay(realDt);
 
   // Animate environment
   const time = performance.now() / 1000;
@@ -1351,13 +1622,22 @@ function update(dt: number) {
     p.life -= gameDt * 2;
     (p.mesh.material as MeshBasicMaterial).opacity = p.life * 0.8;
     if (p.life <= 0) {
-      world.scene.remove(p.mesh);
+      returnToPool(p.mesh);
       particles.splice(i, 1);
     }
   }
 
   // Camera shake
   updateCameraShake(realDt);
+
+  // Round 4: Screen flash
+  updateScreenFlash(realDt);
+
+  // Round 4: Commentary
+  updateCommentary(realDt);
+
+  // Round 4: Camera
+  updateCamera(realDt);
 
   // Toast timer
   if (toastTimer > 0) {
@@ -1407,6 +1687,7 @@ function update(dt: number) {
     if (gsm.speedTimer >= 60) {
       if (gsm.speedHits >= 60) gsm.unlockAchievement('speed60');
       if (gsm.speedHits >= 80) gsm.unlockAchievement('speed80');
+      if (gsm.speedHits >= 100) gsm.unlockAchievement('speed_100');
       endGame();
       return;
     }
@@ -1636,7 +1917,9 @@ function handleInput(dt: number) {
         audio.playSmash();
         spawnParticles(ball.position.clone(), 0xff4400, 15);
         showToast('SMASH!');
+        showCommentary('smash');
         triggerCameraShake(1.0, 0.3);
+        triggerScreenFlash(0xff4400, 0.4);
 
         // Drill smash scoring
         if (gsm.state === 'drill_active' && gsm.currentDrill === 'smash') {
@@ -1668,6 +1951,18 @@ function handleInput(dt: number) {
   if (keyboard.getKeyDown('Escape')) {
     if (gsm.state === 'playing') showUI('paused');
     else if (gsm.state === 'paused') showUI('playing');
+  }
+
+  // Round 4: Camera mode switching (1-5 keys)
+  if (keyboard.getKeyDown('Digit1')) setCameraMode('default');
+  if (keyboard.getKeyDown('Digit2')) setCameraMode('overhead');
+  if (keyboard.getKeyDown('Digit3')) setCameraMode('side');
+  if (keyboard.getKeyDown('Digit4')) setCameraMode('cinematic');
+  if (keyboard.getKeyDown('Digit5')) setCameraMode('ball_follow');
+
+  // Round 4: Manual replay trigger (R key)
+  if (keyboard.getKeyDown('KeyR') && !gsm.replayPlaying && gsm.state === 'playing') {
+    triggerReplay();
   }
 
   if (rightGamepad?.getButtonDown?.(4)) {
@@ -1725,6 +2020,7 @@ function updateBallPhysics(dt: number) {
         audio.playEdgeHit();
         spawnParticles(ball.position.clone(), 0xffff00, 8);
         showToast('EDGE!');
+        showCommentary('edge_hit');
         // Edge achievement: credited on point scored (see scorePoint)
       } else {
         // Normal bounce
@@ -1780,6 +2076,7 @@ function updateBallPhysics(dt: number) {
           ball.velocity.y = -0.3;
           audio.playNetRoller();
           showToast('NET ROLLER!');
+          showCommentary('net_roller');
           spawnParticles(ball.position.clone(), gsm.getTheme().net, 8);
           // Will check for net_roller achievement when point scores
         } else {
@@ -1824,11 +2121,15 @@ function updateBallPhysics(dt: number) {
       if (ball.lastHitBy === 'player') {
         if (ball.bounceCount <= 1) {
           gsm.aces++;
+          consecutiveAcesInRow++;
           gsm.unlockAchievement('ace');
           if (gsm.aces >= 5) gsm.unlockAchievement('ace5');
+          if (consecutiveAcesInRow >= 3) gsm.unlockAchievement('triple_ace');
           audio.playAce();
           showToast('ACE!');
+          showCommentary('ace');
           spawnParticles(ball.position.clone(), 0xffcc00, 20);
+          triggerScreenFlash(0xffcc00, 0.5);
         }
         scorePoint('player', 'winner');
       } else {
@@ -1856,6 +2157,9 @@ function updateBallPhysics(dt: number) {
   ballMesh.position.copy(ball.position);
   ballMesh.rotation.x += ball.velocity.z * dt * 5;
   ballMesh.rotation.z -= ball.velocity.x * dt * 5;
+
+  // Round 4: Record replay frame
+  gsm.recordReplayFrame(ball.position, ball.velocity, playerPaddlePos, aiPaddlePos, ball.active);
 
   // Glow intensity based on speed
   const speed = ball.velocity.length();
@@ -1958,12 +2262,12 @@ function scorePoint(winner: 'player' | 'ai', reason: string) {
   // Edge hit achievement
   if (gsm.edgeHitsThisMatch > 0 && winner === 'player' && reason !== 'out') {
     gsm.unlockAchievement('edge_hit');
+    showCommentary('edge_hit');
   }
 
   // Net roller achievement
   if (reason === 'winner' && winner === 'player') {
-    // Check if the ball had a net roller recently (simplified: check velocity was very low z)
-    gsm.unlockAchievement('net_roller'); // grant on any point that follows a net roller
+    gsm.unlockAchievement('net_roller');
   }
 
   // Drill mode
@@ -1978,6 +2282,7 @@ function scorePoint(winner: 'player' | 'ai', reason: string) {
       gsm.totalRallies++;
       if (gsm.rallyCount > gsm.longestRally) gsm.longestRally = gsm.rallyCount;
       showToast(`Rally: ${gsm.rallyCount} hits!`);
+      if (gsm.rallyCount >= 10) showCommentary('rally_long');
     }
     gsm.rallyCount = 0;
     setTimeout(() => { if (gsm.state === 'playing') serveBall(); }, 1500);
@@ -1992,22 +2297,58 @@ function scorePoint(winner: 'player' | 'ai', reason: string) {
 
   gsm.pointScored(winner);
 
+  // Round 4: Dramatic screen flash on important points
+  const isImportantPoint = gsm.isMatchPoint || gsm.isDeuce || gsm.currentStreak >= 3;
+
   if (winner === 'player') {
     audio.playPointWon();
     gsm.unlockAchievement('first_point');
-    if (gsm.currentStreak >= 3) { gsm.unlockAchievement('streak3'); audio.playStreak(gsm.currentStreak); }
+
+    // Round 4: Streak achievements and commentary
+    if (gsm.currentStreak >= 3) {
+      gsm.unlockAchievement('streak3');
+      audio.playStreak(gsm.currentStreak);
+      showCommentary('streak');
+    }
     if (gsm.currentStreak >= 5) gsm.unlockAchievement('streak5');
     if (gsm.currentStreak >= 10) gsm.unlockAchievement('streak10');
     showToast(`${gsm.playerScore} - ${gsm.aiScore}`);
     spawnParticles(ball.position.clone(), gsm.getTheme().accent, 12);
 
+    // Round 4: Screen flash on dramatic points
+    if (isImportantPoint) {
+      triggerScreenFlash(gsm.getTheme().accent, 0.4);
+      audio.playDramaticPoint();
+    }
+
     // Crowd reactions on important points
-    if (gsm.isMatchPoint) audio.playCrowdCheer();
-    else if (gsm.currentStreak >= 3) audio.playCrowdOoh();
+    if (gsm.isMatchPoint) {
+      audio.playCrowdCheer();
+      showCommentary('match_point');
+    } else if (gsm.currentStreak >= 3) {
+      audio.playCrowdOoh();
+    }
+
+    // Round 4: Rally comeback achievement
+    if (gsm.rallyCount >= 15 && gsm.maxTrailingDeficit >= 3) {
+      gsm.unlockAchievement('rally_comeback');
+      showCommentary('comeback');
+    }
+
+    // Round 4: Schedule instant replay for dramatic points
+    if (gsm.isMatchPoint || gsm.currentStreak >= 5 || (gsm.isDeuce && gsm.playerScore === gsm.aiScore + 1)) {
+      scheduleReplay(1.5);
+    }
   } else {
     audio.playPointLost();
     showToast(`${gsm.playerScore} - ${gsm.aiScore}`);
-    if (gsm.isMatchPoint) audio.playCrowdGasp();
+    if (gsm.isMatchPoint) {
+      audio.playCrowdGasp();
+      showCommentary('match_point');
+      triggerScreenFlash(0xff3333, 0.3);
+    }
+    // Reset consecutive aces
+    consecutiveAcesInRow = 0;
   }
 
   gsm.rallyCount = 0;
@@ -2026,6 +2367,7 @@ function scorePoint(winner: 'player' | 'ai', reason: string) {
   if (gsm.isDeuce && gsm.playerScore === gsm.aiScore) {
     audio.playDeuceAlert();
     showToast('DEUCE!');
+    showCommentary('deuce');
   }
 
   // Match point alert
@@ -2075,6 +2417,8 @@ function updateAI(dt: number) {
     if (aiReactionTimer >= diff.aiReaction) {
       const timeToArrive = Math.abs((-TABLE_LENGTH / 2 + 0.15 - ball.position.z) / ball.velocity.z);
       aiTargetX = ball.position.x + ball.velocity.x * timeToArrive;
+      // Read spin based on difficulty
+      aiTargetX += ball.spin.y * 0.1 * (diff as any).aiSpinRead || 0;
       aiTargetX += (Math.random() - 0.5) * (1 - diff.aiAccuracy) * TABLE_WIDTH * 0.5;
       aiTargetX = Math.max(-TABLE_WIDTH / 2, Math.min(TABLE_WIDTH / 2, aiTargetX));
       aiReactionTimer = 0;
@@ -2091,28 +2435,55 @@ function updateAI(dt: number) {
 
   aiPaddle.position.copy(aiPaddlePos);
 
-  // AI hit ball
+  // AI hit ball with advanced shot selection (Round 4)
   if (ball.active && ball.lastHitBy !== 'ai') {
     const dist = ball.position.distanceTo(aiPaddlePos);
     if (dist < PADDLE_RADIUS + BALL_RADIUS + 0.04) {
-      const hitPower = 2 + diff.aiAggression * 4 + Math.random() * 2;
-      const aimX = (Math.random() - 0.5) * (1.5 - diff.aiAccuracy * 0.8);
+      const ballHeight = ball.position.y - TABLE_HEIGHT;
+      const isCounterAttack = ball.velocity.length() > 5;
+      const shot = gsm.selectAIShot(gsm.difficulty, ballHeight, isCounterAttack);
+
+      const basePower = 2 + diff.aiAggression * 4 + Math.random() * 2;
+      const hitPower = basePower * shot.speedMult;
+      const aimX = (Math.random() - 0.5) * shot.aimSpread * (1.5 - diff.aiAccuracy * 0.8);
+
       ball.velocity.set(
         aimX,
-        1.0 + hitPower * 0.25,
+        (1.0 + hitPower * 0.25) * shot.heightMult,
         hitPower
       );
       ball.spin.set(
-        -hitPower * 0.4 * diff.aiAggression,
-        (Math.random() - 0.5) * 3 * diff.aiAggression,
+        -hitPower * 0.4 * diff.aiAggression * shot.spinMult,
+        (Math.random() - 0.5) * 3 * diff.aiAggression * shot.spinMult,
         0
       );
       ball.lastHitBy = 'ai';
       ball.bounceCount = 0;
       gsm.rallyCount++;
       const spinAmt = ball.spin.length();
-      audio.playPaddleHit(hitPower / 8, spinAmt);
-      spawnParticles(ball.position.clone(), gsm.getTheme().aiPaddle, 6);
+
+      // Shot-specific audio and VFX
+      if (shot.type === 'drop') {
+        audio.playDropShot();
+        showCommentary('drop_shot');
+        spawnParticles(ball.position.clone(), 0x88ffaa, 4);
+      } else if (shot.type === 'lob') {
+        audio.playLob();
+        showCommentary('lob');
+        spawnParticles(ball.position.clone(), 0x88aaff, 4);
+      } else if (shot.type === 'smash' && hitPower > 6) {
+        audio.playSmash();
+        spawnParticles(ball.position.clone(), gsm.getTheme().aiPaddle, 15);
+        triggerCameraShake(0.5, 0.2);
+        triggerScreenFlash(gsm.getTheme().aiPaddle, 0.3);
+      } else if (shot.type === 'cross_court') {
+        audio.playPaddleHitPower();
+        showCommentary('cross_court');
+        spawnParticles(ball.position.clone(), gsm.getTheme().aiPaddle, 8);
+      } else {
+        audio.playPaddleHit(hitPower / 8, spinAmt);
+        spawnParticles(ball.position.clone(), gsm.getTheme().aiPaddle, 6);
+      }
     }
   }
 }
@@ -2224,7 +2595,7 @@ function updateHUD() {
 
   setText(doc, 'hud-serve', gsm.serving === 'player' ? 'YOUR SERVE' : 'AI SERVE');
 
-  // Show combo/streak and deuce status
+  // Show combo/streak, deuce status, and camera mode
   let comboText = '';
   if (gsm.isDeuce) comboText = '⚡ DEUCE';
   else if (gsm.currentStreak > 1) comboText = `Streak: ${gsm.currentStreak}`;

@@ -1,0 +1,5 @@
+<panel>
+  <vertical alignment="center">
+    <text id="commentary-text" font-size="16" color="#ffcc00" alignment="center"></text>
+  </vertical>
+</panel>
