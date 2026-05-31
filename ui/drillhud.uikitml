@@ -1,0 +1,38 @@
+<style>
+  .drillhud-panel {
+    display: flex;
+    flex-direction: column;
+    padding-top: 1;
+    padding-bottom: 1;
+    padding-left: 2;
+    padding-right: 2;
+    background-color: rgba(0, 0, 0, 0.75);
+    border-color: #33ff88;
+    border-width: 0.08;
+    border-radius: 0.8;
+  }
+  .drillhud-title {
+    font-size: 1.8;
+    color: #33ff88;
+    font-weight: bold;
+  }
+  .drillhud-score {
+    font-size: 2.5;
+    color: #ffffff;
+    font-weight: bold;
+  }
+  .drillhud-timer {
+    font-size: 1.5;
+    color: #ffaa00;
+  }
+  .drillhud-target {
+    font-size: 1.2;
+    color: #aaaaaa;
+  }
+</style>
+<div class="drillhud-panel">
+  <span id="drillhud-name" class="drillhud-title">RETURN DRILL</span>
+  <span id="drillhud-score" class="drillhud-score">0 / 20</span>
+  <span id="drillhud-timer" class="drillhud-timer">60s</span>
+  <span id="drillhud-target" class="drillhud-target"></span>
+</div>

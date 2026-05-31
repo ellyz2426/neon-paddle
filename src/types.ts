@@ -2,7 +2,10 @@
 import { Vector3 } from '@iwsdk/core';
 
 // === GAME STATES ===
-export type GameState = 'title' | 'modeselect' | 'difficulty' | 'playing' | 'paused' | 'gameover' | 'leaderboard' | 'achievements' | 'settings' | 'help' | 'stats' | 'countdown' | 'serve_practice' | 'rally_practice';
+export type GameState = 'title' | 'modeselect' | 'difficulty' | 'playing' | 'paused' | 'gameover'
+  | 'leaderboard' | 'achievements' | 'settings' | 'help' | 'stats' | 'countdown'
+  | 'serve_practice' | 'rally_practice' | 'tournament' | 'tournament_bracket'
+  | 'drills' | 'drill_active';
 
 // === BALL PHYSICS ===
 export interface BallState {
@@ -20,10 +23,11 @@ export const TABLE_LENGTH = 2.74; // m (standard table tennis)
 export const TABLE_WIDTH = 1.525;
 export const TABLE_HEIGHT = 0.76;
 export const NET_HEIGHT = 0.1525;
-export const NET_OVERHANG = 0.1525; // net extends past table on each side
+export const NET_OVERHANG = 0.1525;
 export const BALL_RADIUS = 0.02; // 40mm diameter
 export const PADDLE_RADIUS = 0.08;
 export const PADDLE_THICKNESS = 0.012;
+export const TABLE_EDGE_WIDTH = 0.015; // edge detection zone
 
 // === SCORING ===
 export const WIN_SCORE = 11;
@@ -44,6 +48,7 @@ export const GAME_MODES: GameMode[] = [
   { id: 'speed', name: 'SPEED RALLY', description: '60 seconds, max hits', rounds: 0 },
   { id: 'serve', name: 'SERVE PRACTICE', description: 'Perfect your serve', rounds: 0 },
   { id: 'training', name: 'TRAINING', description: 'AI returns everything', rounds: 0 },
+  { id: 'tournament', name: 'TOURNAMENT', description: '4-round bracket challenge', rounds: 0 },
 ];
 
 // === DIFFICULTY ===
@@ -52,7 +57,7 @@ export interface DifficultyConfig {
   aiSpeed: number;
   aiReaction: number;
   aiAccuracy: number;
-  aiSpinRead: number; // 0-1 how well AI reads spin
+  aiSpinRead: number;
   aiAggression: number;
 }
 
@@ -60,6 +65,41 @@ export const DIFFICULTIES: DifficultyConfig[] = [
   { name: 'EASY', aiSpeed: 2.0, aiReaction: 0.4, aiAccuracy: 0.5, aiSpinRead: 0.2, aiAggression: 0.2 },
   { name: 'MEDIUM', aiSpeed: 3.5, aiReaction: 0.25, aiAccuracy: 0.72, aiSpinRead: 0.5, aiAggression: 0.5 },
   { name: 'HARD', aiSpeed: 5.5, aiReaction: 0.12, aiAccuracy: 0.92, aiSpinRead: 0.85, aiAggression: 0.8 },
+];
+
+// === TOURNAMENT ===
+export interface TournamentRound {
+  opponentName: string;
+  difficulty: number; // index into DIFFICULTIES (interpolated)
+  aiSpeed: number;
+  aiReaction: number;
+  aiAccuracy: number;
+  aiAggression: number;
+  won: boolean | null;
+  score: string;
+}
+
+export const TOURNAMENT_BRACKET: Omit<TournamentRound, 'won' | 'score'>[] = [
+  { opponentName: 'SPARK', difficulty: 0, aiSpeed: 1.8, aiReaction: 0.45, aiAccuracy: 0.45, aiAggression: 0.15 },
+  { opponentName: 'PULSE', difficulty: 0, aiSpeed: 2.8, aiReaction: 0.32, aiAccuracy: 0.6, aiAggression: 0.35 },
+  { opponentName: 'VORTEX', difficulty: 1, aiSpeed: 4.0, aiReaction: 0.2, aiAccuracy: 0.78, aiAggression: 0.6 },
+  { opponentName: 'CIPHER', difficulty: 2, aiSpeed: 5.8, aiReaction: 0.1, aiAccuracy: 0.95, aiAggression: 0.85 },
+];
+
+// === PRACTICE DRILLS ===
+export interface DrillConfig {
+  id: string;
+  name: string;
+  description: string;
+  duration: number; // seconds
+  targetScore: number;
+}
+
+export const DRILLS: DrillConfig[] = [
+  { id: 'return', name: 'RETURN DRILL', description: 'Return 20 serves', duration: 60, targetScore: 20 },
+  { id: 'placement', name: 'PLACEMENT', description: 'Hit the target zones', duration: 45, targetScore: 10 },
+  { id: 'spin', name: 'SPIN TRAINING', description: 'Apply spin to returns', duration: 60, targetScore: 15 },
+  { id: 'smash', name: 'SMASH DRILL', description: 'Practice smash shots', duration: 45, targetScore: 8 },
 ];
 
 // === THEMES ===
@@ -95,25 +135,48 @@ export interface Achievement {
 
 export function getDefaultAchievements(): Achievement[] {
   return [
+    // Core gameplay (7)
     { id: 'first_point', name: 'First Rally', description: 'Win your first point', unlocked: false },
     { id: 'first_win', name: 'Victor', description: 'Win your first match', unlocked: false },
     { id: 'ace', name: 'Ace!', description: 'Score an ace serve', unlocked: false },
-    { id: 'ace5', name: 'Ace Machine', description: 'Score 5 aces in one match', unlocked: false },
+    { id: 'ace5', name: 'Ace Machine', description: '5 aces in one match', unlocked: false },
+    { id: 'ace10', name: 'Serve Master', description: '10 aces total career', unlocked: false },
     { id: 'smash', name: 'Smash Hit', description: 'Hit a smash shot', unlocked: false },
-    { id: 'spin_master', name: 'Spin Master', description: 'Win a point with a heavy spin shot', unlocked: false },
+    { id: 'spin_master', name: 'Spin Master', description: 'Win with heavy spin', unlocked: false },
+    // Rally achievements (5)
     { id: 'rally5', name: 'Rally Starter', description: 'Keep a 5-hit rally', unlocked: false },
     { id: 'rally10', name: 'Rally King', description: 'Keep a 10-hit rally', unlocked: false },
     { id: 'rally25', name: 'Rally Legend', description: 'Keep a 25-hit rally', unlocked: false },
     { id: 'rally50', name: 'Endurance', description: 'Keep a 50-hit rally', unlocked: false },
+    { id: 'rally100', name: 'Marathon', description: 'Keep a 100-hit rally', unlocked: false },
+    // Winning achievements (5)
     { id: 'shutout', name: 'Shutout', description: 'Win 11-0', unlocked: false },
-    { id: 'comeback', name: 'Comeback King', description: 'Win after being down 5+', unlocked: false },
+    { id: 'comeback', name: 'Comeback King', description: 'Win after trailing 5+', unlocked: false },
+    { id: 'deuce_win', name: 'Clutch', description: 'Win from deuce', unlocked: false },
+    { id: 'hard_win', name: 'Master', description: 'Beat Hard difficulty', unlocked: false },
+    { id: 'perfect_set', name: 'Perfect', description: 'Win set without losing', unlocked: false },
+    // Streak achievements (3)
     { id: 'streak3', name: 'Hot Streak', description: '3 consecutive points', unlocked: false },
     { id: 'streak5', name: 'On Fire', description: '5 consecutive points', unlocked: false },
     { id: 'streak10', name: 'Unstoppable', description: '10 consecutive points', unlocked: false },
-    { id: 'deuce_win', name: 'Clutch', description: 'Win from deuce', unlocked: false },
-    { id: 'hard_win', name: 'Master', description: 'Win on Hard difficulty', unlocked: false },
+    // Special modes (4)
     { id: 'speed60', name: 'Speed Demon', description: '60+ hits in Speed Rally', unlocked: false },
+    { id: 'speed80', name: 'Lightning', description: '80+ hits in Speed Rally', unlocked: false },
+    { id: 'tournament_win', name: 'Champion', description: 'Win the tournament', unlocked: false },
+    { id: 'drill_complete', name: 'Student', description: 'Complete a practice drill', unlocked: false },
+    // Career milestones (4)
     { id: 'games10', name: 'Veteran', description: 'Play 10 matches', unlocked: false },
+    { id: 'games25', name: 'Dedicated', description: 'Play 25 matches', unlocked: false },
+    { id: 'games50', name: 'Obsessed', description: 'Play 50 matches', unlocked: false },
+    { id: 'smash10', name: 'Destroyer', description: '10 smashes in a match', unlocked: false },
+    // Table tricks (3)
+    { id: 'edge_hit', name: 'Edge Lord', description: 'Score on a table edge hit', unlocked: false },
+    { id: 'net_roller', name: 'Net Roller', description: 'Ball rolls over the net', unlocked: false },
+    { id: 'all_modes', name: 'Explorer', description: 'Play every game mode', unlocked: false },
+    // Customization (2)
+    { id: 'all_themes', name: 'Fashionista', description: 'Try all 5 themes', unlocked: false },
+    { id: 'all_skins', name: 'Collector', description: 'Try all 6 paddle skins', unlocked: false },
+    // Daily
     { id: 'daily', name: 'Daily Grind', description: 'Complete a Daily Challenge', unlocked: false },
   ];
 }
@@ -171,9 +234,37 @@ export class GameStateManager {
   totalRallies: number = 0;
   longestRally: number = 0;
   totalPointsWon: number = 0;
+  modesPlayed: Set<string> = new Set();
+  themesUsed: Set<number> = new Set();
+  skinsUsed: Set<number> = new Set();
+
+  // Tournament state
+  tournamentRound: number = 0;
+  tournamentResults: TournamentRound[] = [];
+
+  // Drill state
+  currentDrill: string = '';
+  drillScore: number = 0;
+  drillTimer: number = 0;
+  drillTargets: Vector3[] = [];
+
+  // Match point / deuce tracking
+  isMatchPoint: boolean = false;
+  isDeuce: boolean = false;
+  maxTrailingDeficit: number = 0; // largest deficit overcome
+
+  // Slow-mo
+  slowMoTimer: number = 0;
+  slowMoActive: boolean = false;
+
+  // Camera shake
+  shakeIntensity: number = 0;
+  shakeTimer: number = 0;
+
+  // Edge hits
+  edgeHitsThisMatch: number = 0;
 
   achievements: Achievement[] = getDefaultAchievements();
-
   leaderboard: { score: string; mode: string; difficulty: string; date: string }[] = [];
 
   constructor() {
@@ -197,6 +288,9 @@ export class GameStateManager {
         this.totalRallies = data.totalRallies ?? 0;
         this.longestRally = data.longestRally ?? 0;
         this.totalPointsWon = data.totalPointsWon ?? 0;
+        if (data.modesPlayed) this.modesPlayed = new Set(data.modesPlayed);
+        if (data.themesUsed) this.themesUsed = new Set(data.themesUsed);
+        if (data.skinsUsed) this.skinsUsed = new Set(data.skinsUsed);
         if (data.achievements) {
           for (const a of data.achievements) {
             const found = this.achievements.find(x => x.id === a.id);
@@ -205,7 +299,7 @@ export class GameStateManager {
         }
         if (data.leaderboard) this.leaderboard = data.leaderboard;
       }
-    } catch {}
+    } catch { /* ignore */ }
   }
 
   savePersistence() {
@@ -223,10 +317,13 @@ export class GameStateManager {
         totalRallies: this.totalRallies,
         longestRally: this.longestRally,
         totalPointsWon: this.totalPointsWon,
+        modesPlayed: [...this.modesPlayed],
+        themesUsed: [...this.themesUsed],
+        skinsUsed: [...this.skinsUsed],
         achievements: this.achievements.map(a => ({ id: a.id, unlocked: a.unlocked })),
         leaderboard: this.leaderboard.slice(0, 20),
       }));
-    } catch {}
+    } catch { /* ignore */ }
   }
 
   resetMatch() {
@@ -245,6 +342,14 @@ export class GameStateManager {
     this.totalHits = 0;
     this.speedTimer = 0;
     this.speedHits = 0;
+    this.isMatchPoint = false;
+    this.isDeuce = false;
+    this.maxTrailingDeficit = 0;
+    this.slowMoTimer = 0;
+    this.slowMoActive = false;
+    this.shakeIntensity = 0;
+    this.shakeTimer = 0;
+    this.edgeHitsThisMatch = 0;
   }
 
   getTheme(): Theme {
@@ -281,16 +386,25 @@ export class GameStateManager {
     } else {
       this.aiScore++;
       this.currentStreak = 0;
+      // Track deficit for comeback achievement
+      const deficit = this.aiScore - this.playerScore;
+      if (deficit > this.maxTrailingDeficit) this.maxTrailingDeficit = deficit;
     }
     this.serveCount++;
     // Alternate serve every 2 points (or every point in deuce)
     const totalPoints = this.playerScore + this.aiScore;
     if (this.playerScore >= 10 && this.aiScore >= 10) {
-      // Deuce: alternate every serve
+      this.isDeuce = true;
       this.serving = totalPoints % 2 === 0 ? 'player' : 'ai';
     } else {
+      this.isDeuce = false;
       this.serving = Math.floor(totalPoints / 2) % 2 === 0 ? 'player' : 'ai';
     }
+
+    // Check match point
+    this.isMatchPoint = (this.playerScore >= 10 && this.playerScore > this.aiScore)
+      || (this.aiScore >= 10 && this.aiScore > this.playerScore);
+
     this.rallyCount = 0;
   }
 
@@ -308,6 +422,8 @@ export class GameStateManager {
     this.playerScore = 0;
     this.aiScore = 0;
     this.serveCount = 0;
+    this.isDeuce = false;
+    this.isMatchPoint = false;
   }
 
   checkMatchWin(): 'player' | 'ai' | null {
@@ -317,5 +433,38 @@ export class GameStateManager {
     if (this.playerSets >= this.setsToWin) return 'player';
     if (this.aiSets >= this.setsToWin) return 'ai';
     return null;
+  }
+
+  // Tournament helpers
+  initTournament() {
+    this.tournamentRound = 0;
+    this.tournamentResults = TOURNAMENT_BRACKET.map(t => ({
+      ...t,
+      won: null,
+      score: '',
+    }));
+  }
+
+  getCurrentTournamentOpponent(): TournamentRound | null {
+    if (this.tournamentRound >= this.tournamentResults.length) return null;
+    return this.tournamentResults[this.tournamentRound];
+  }
+
+  advanceTournament(won: boolean, score: string) {
+    if (this.tournamentRound < this.tournamentResults.length) {
+      this.tournamentResults[this.tournamentRound].won = won;
+      this.tournamentResults[this.tournamentRound].score = score;
+      this.tournamentRound++;
+    }
+  }
+
+  isTournamentOver(): boolean {
+    // Over if lost any round or completed all rounds
+    return this.tournamentResults.some(r => r.won === false) ||
+           this.tournamentRound >= this.tournamentResults.length;
+  }
+
+  wonTournament(): boolean {
+    return this.tournamentResults.every(r => r.won === true);
   }
 }

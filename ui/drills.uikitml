@@ -1,0 +1,69 @@
+<style>
+  .drill-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 2;
+    padding-bottom: 2;
+    padding-left: 3;
+    padding-right: 3;
+    background-color: rgba(0, 0, 0, 0.85);
+    border-color: #33ff88;
+    border-width: 0.12;
+    border-radius: 1.2;
+  }
+  .drill-title {
+    font-size: 3;
+    color: #33ff88;
+    font-weight: bold;
+  }
+  .drill-btn {
+    background-color: rgba(51, 255, 136, 0.12);
+    border-color: #33ff88;
+    border-width: 0.06;
+    border-radius: 0.4;
+    padding-top: 0.6;
+    padding-bottom: 0.6;
+    padding-left: 2;
+    padding-right: 2;
+    margin-top: 0.6;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .drill-name {
+    font-size: 1.8;
+    color: #33ff88;
+    font-weight: bold;
+  }
+  .drill-desc {
+    font-size: 1.1;
+    color: #888888;
+  }
+  .back-btn {
+    background-color: rgba(255, 0, 255, 0.1);
+    border-color: #ff00ff;
+    border-width: 0.06;
+    border-radius: 0.4;
+    padding-top: 0.5;
+    padding-bottom: 0.5;
+    padding-left: 2;
+    padding-right: 2;
+    margin-top: 1;
+    cursor: pointer;
+  }
+  .back-text {
+    font-size: 1.5;
+    color: #ff00ff;
+  }
+</style>
+<div class="drill-panel">
+  <span class="drill-title">PRACTICE DRILLS</span>
+  <div id="btn-drill-0" class="drill-btn"><span class="drill-name">RETURN DRILL</span><span class="drill-desc">Return 20 serves</span></div>
+  <div id="btn-drill-1" class="drill-btn"><span class="drill-name">PLACEMENT</span><span class="drill-desc">Hit the target zones</span></div>
+  <div id="btn-drill-2" class="drill-btn"><span class="drill-name">SPIN TRAINING</span><span class="drill-desc">Apply spin to returns</span></div>
+  <div id="btn-drill-3" class="drill-btn"><span class="drill-name">SMASH DRILL</span><span class="drill-desc">Practice smash shots</span></div>
+  <div id="btn-back-drills" class="back-btn"><span class="back-text">BACK</span></div>
+</div>

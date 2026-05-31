@@ -1,94 +1,129 @@
-# Neon Volley VR
+# 🏓 Neon Paddle VR
 
-Holodeck VR beach volleyball — smash neon balls across a glowing court, outplay the AI opponent with bumps, sets, and spikes in this intense arcade volleyball experience.
+A holodeck-style table tennis game built with IWSDK (Immersive Web SDK). Play in VR or in your browser — neon-lit regulation table, AI opponents, tournament brackets, and procedural audio.
 
-Built with [IWSDK 0.4.1](https://iwsdk.dev) (Immersive Web SDK).
-
-## 🎮 Play
-
-**[▶ Play Now](https://ellyz2426.github.io/neon-volley/)**
-
-Works in any modern browser. VR headset optional (Meta Quest recommended).
+**[Play Now →](https://ellyz2426.github.io/neon-paddle/)**
 
 ## Features
 
-### Gameplay
-- **Beach volleyball physics**: 4-substep simulation with gravity, air resistance, spin effects, and realistic ball trajectory
-- **4 hit types**: Bump (low ball, high arc), Set (medium height, controlled), Spike (above net, powerful downward), Block (intercept at net)
-- **Block mechanic**: Intercept opponent shots at the net for a powerful reflection
-- **Net collision**: Ball bounces off net mesh with energy loss, can dribble over the top
-- **Court boundaries**: Out-of-bounds detection with last-touch attribution
-- **Serve mechanic**: Charge-and-release power bar with accuracy/scatter tradeoff
-- **Ace detection**: Score directly off a serve for bonus recognition
+### Core Gameplay
+- **Regulation table tennis** — 2.74m × 1.525m table with proper net height (15.25cm)
+- **Real ball physics** — gravity, air resistance, Magnus effect spin influence, 4-substep integration
+- **Spin mechanics** — topspin, backspin, sidespin affecting trajectory and bounce behavior
+- **Serve system** — hold-to-charge power bar, release to launch with power + spin
+- **Table edge hits** — unpredictable bounce deflections with special effects
+- **Net rollers** — ball barely clearing the net with dramatic sound
+- **Scoring** — first to 11, win by 2, with proper deuce and alternating serve rules
 
-### Game Modes
-- **Match**: Full match — first to 21, win by 2, best of 3 sets
-- **Quick Match**: Short game — first to 11, single set
-- **Rally**: Keep the rally alive as long as possible, track your best
-- **Serve Practice**: Hone your serve accuracy and power
-- **Spike Drill**: Ball tossed up for spike practice
-- **Daily Challenge**: Seeded difficulty that changes daily
+### Game Modes (7)
+| Mode | Description |
+|------|-------------|
+| **Match** | Best of 5 sets to 11 points |
+| **Quick Match** | Single set to 11 |
+| **Rally Mode** | Keep the rally going as long as possible |
+| **Speed Rally** | 60 seconds — score as many hits as possible |
+| **Serve Practice** | Perfect your serve technique |
+| **Training** | AI returns everything for practice |
+| **Tournament** | 4-round bracket: beat SPARK → PULSE → VORTEX → CIPHER |
 
 ### AI Opponent
-- **3 difficulty levels**: Easy, Medium, Hard
-- **Adaptive behavior**: Prediction-based movement, reaction time, accuracy, hit range
-- **AI serves**: Opponent serves with difficulty-scaled power and accuracy
-- **Hit types**: AI uses bumps, sets, and spikes contextually based on ball position
+- 3 difficulty levels: Easy, Medium, Hard
+- AI predicts ball landing with accuracy noise
+- Adjustable reaction time, speed, spin reading, and aggression
+- Tournament mode features 4 unique opponents with escalating difficulty
 
-### Progression
-- **25 achievements** with localStorage persistence (First Blood, Ace!, Spike Master, Wall, Iron Curtain, Unstoppable, Shutout, and more)
-- **Top 20 leaderboard** tracking scores, modes, difficulty, and win/loss
-- **Career stats panel**: Games, wins, win rate, aces, spikes, blocks, best rally, achievement progress
-- **Combo scoring system**: Consecutive point multiplier tracking
-- **Career stats**: Games played, wins, total aces, spikes, blocks, best rally
+### Practice Drills
+- **Return Drill** — Return 20 serves within 60 seconds
+- **Placement** — Hit target zones on the opponent's side
+- **Spin Training** — Apply spin to returns
+- **Smash Drill** — Practice smash shots on high balls
 
-### Visuals
-- **Holodeck environment**: Neon grid floor/ceiling, 14 floating wireframe decorations, 40 ambient particles, fog
-- **5 court themes**: Holodeck (cyan), Crimson (red), Ocean (blue), Ultraviolet (purple), Solar (gold) — live-switchable
-- **Ball effects**: Glowing ball with wireframe overlay, speed-reactive trail (hot orange at high speed), ground shadow, speed-reactive glow, serve toss animation
-- **Neon opponent**: Wireframe humanoid with body, head, arms, legs, visor, hit animations, idle bob, and ball tracking
-- **Net proximity glow**: Net top band pulses when ball approaches
-- **Player hands**: Glowing spheres with proximity pulse when near ball
-- **Particle system**: Pooled particles (100 max) with gravity for hits, points, and celebrations
-- **Ball landing markers**: Visual indicators where the ball contacts the ground
-- **Court lines**: Boundary, center, attack, and service zone markings
+### Visual Effects
+- **Holodeck environment** — neon grid floor/ceiling, floating wireframe decorations, 40 ambient particles
+- **Ball shadow** — trajectory preview projected onto the table surface
+- **Spin visualization** — rotating ring lines showing spin direction and intensity
+- **Ball trail** — additive blending trail following the ball
+- **Particle effects** — on hits, aces, smashes, edge hits, net rollers
+- **Camera shake** — on smash shots and power hits
+- **Slow-motion** — dramatic slow-mo on match point scoring
+- **Deuce tension** — pulsing table edges and tension drone during deuce
 
 ### Audio
-- **15+ procedural Web Audio SFX**: Serve, bump, set, spike, net hit, point won/lost, ace, victory/defeat, countdown, game start, achievement unlock
-- **Ambient synthwave drone** music with bass oscillator + triangle pad + LFO modulation
-- **Volume controls**: Independent SFX and music volume sliders in settings
+- **Procedural Web Audio** — all sounds generated in real-time, no audio files needed
+- **Hit variety** — sound changes with power level (soft/normal/power) and spin amount
+- **Crowd reactions** — cheers on aces, gasps on match point, "ooh" on long rallies
+- **Deuce drone** — low-frequency tension rumble during deuce
+- **Slow-mo audio** — pitch drop entering slow-mo, rise on exit
+- **Tournament fanfare** — special sounds for bracket progression
+- **Ambient music** — bass drone + triangle pad with LFO modulation
 
-### UI
-- **14 PanelUI templates** (`.uikitml`), zero HTML DOM — fully VR-compatible
-- Head-following HUD with score, set info, and combo display
-- Serve power bar with visual charge indicator
-- Countdown overlay for match start
-- Toast notifications for points, aces, achievements
-- World-space panels: title, mode select, difficulty, pause, game over, leaderboard, achievements, settings, help
+### Achievements (35)
+Track your progress across core gameplay, rallies, winning, streaks, special modes, career milestones, table tricks, and customization. Examples:
+- 🏆 **Champion** — Win the tournament
+- ⚡ **Unstoppable** — 10 consecutive points
+- 🏃 **Marathon** — 100-hit rally
+- 🎯 **Edge Lord** — Score on a table edge hit
+- 🔄 **Net Roller** — Ball rolls over the net
 
-### Controls
-| Action | Browser | VR |
-|--------|---------|-----|
-| Move | WASD / Arrows | Left Thumbstick |
-| Serve / Hit | Space | Right Trigger |
-| Pause | Escape | B Button |
+### Customization
+- **5 themes** — Holodeck, Crimson, Neon Green, Ultraviolet, Solar Blaze
+- **6 paddle skins** — Neon Cyan, Inferno, Glacier, Plasma, Champion, Emerald
+- Volume controls for SFX and music
 
-## Tech
+### Persistence
+- Career stats: games, wins, win rate, aces, smashes, longest rally, total points
+- Top 20 leaderboard with scores, modes, and dates
+- Achievement progress saved to localStorage
 
-- IWSDK 0.4.1 (Three.js + ECS)
-- TypeScript (~2,900 lines across 3 source files)
-- 14 `.uikitml` spatial UI templates
-- Procedural Web Audio (no audio files)
-- localStorage persistence (achievements, stats, leaderboard)
-- GitHub Pages deployment
+## Controls
 
-## Build
+### Browser (Keyboard)
+| Key | Action |
+|-----|--------|
+| **W/A/S/D** or **Arrow Keys** | Move paddle |
+| **Space** (hold + release) | Serve — hold to charge, release to launch |
+| **Escape** | Pause/Resume |
+
+### VR (XR Controllers)
+| Input | Action |
+|-------|--------|
+| **Right Thumbstick** | Move paddle |
+| **Right Trigger** (hold + release) | Serve — hold to charge, release to launch |
+| **B Button** | Pause/Resume |
+| **Laser Pointer** | Navigate menus |
+
+## Tech Stack
+- **[IWSDK](https://iwsdk.dev)** 0.4.1 — Immersive Web SDK for WebXR
+- **PanelUI** — All game UI via spatial `.uikitml` panels (zero HTML DOM overlays)
+- **Web Audio API** — Procedural sound synthesis
+- **TypeScript** — Strict mode, no runtime errors
+
+## Project Structure
+```
+neon-paddle/
+├── src/
+│   ├── index.ts      # Main game loop, rendering, input, physics
+│   ├── types.ts       # Types, constants, themes, achievements, state management
+│   └── audio.ts       # Procedural audio manager
+├── ui/                # 19 .uikitml spatial UI templates
+│   ├── title.uikitml
+│   ├── hud.uikitml
+│   ├── tournament.uikitml
+│   ├── drills.uikitml
+│   ├── rallycounter.uikitml
+│   ├── matchpoint.uikitml
+│   └── ... (13 more)
+├── vite.config.ts
+└── tsconfig.json
+```
+
+## Development
 
 ```bash
 npm install
-npx vite build
+npm run dev         # Start dev server with hot reload
+npm run build       # Production build to dist/
 ```
 
 ## License
-
 MIT

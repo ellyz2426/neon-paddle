@@ -67,5 +67,6 @@
   <div id="btn-mode-3" class="mode-btn"><span class="mode-name">SPEED RALLY</span><span class="mode-desc">60 seconds, max hits</span></div>
   <div id="btn-mode-4" class="mode-btn"><span class="mode-name">SERVE PRACTICE</span><span class="mode-desc">Perfect your serve</span></div>
   <div id="btn-mode-5" class="mode-btn"><span class="mode-name">TRAINING</span><span class="mode-desc">AI returns everything</span></div>
+  <div id="btn-mode-6" class="mode-btn"><span class="mode-name">TOURNAMENT</span><span class="mode-desc">4-round bracket challenge</span></div>
   <div id="btn-back-mode" class="back-btn"><span class="back-text">BACK</span></div>
 </div>

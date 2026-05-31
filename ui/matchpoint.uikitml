@@ -1,0 +1,28 @@
+<style>
+  .mp-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 1;
+    padding-bottom: 1;
+    padding-left: 2;
+    padding-right: 2;
+    background-color: rgba(255, 0, 0, 0.15);
+    border-color: #ff3333;
+    border-width: 0.12;
+    border-radius: 0.8;
+  }
+  .mp-text {
+    font-size: 2.5;
+    color: #ff3333;
+    font-weight: bold;
+  }
+  .mp-sub {
+    font-size: 1.3;
+    color: #ff8888;
+  }
+</style>
+<div class="mp-panel">
+  <span id="mp-text" class="mp-text">MATCH POINT</span>
+  <span id="mp-sub" class="mp-sub"></span>
+</div>

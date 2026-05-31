@@ -1,0 +1,28 @@
+<style>
+  .rally-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 0.5;
+    padding-bottom: 0.5;
+    padding-left: 1.5;
+    padding-right: 1.5;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-color: #ffcc00;
+    border-width: 0.06;
+    border-radius: 0.6;
+  }
+  .rally-count {
+    font-size: 4;
+    color: #ffcc00;
+    font-weight: bold;
+  }
+  .rally-label {
+    font-size: 1;
+    color: #aa9900;
+  }
+</style>
+<div class="rally-panel">
+  <span id="rally-count" class="rally-count">0</span>
+  <span class="rally-label">RALLY</span>
+</div>
