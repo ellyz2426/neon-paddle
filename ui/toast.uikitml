@@ -1,0 +1,22 @@
+<style>
+  .toast-panel {
+    display: flex;
+    padding-top: 0.8;
+    padding-bottom: 0.8;
+    padding-left: 2;
+    padding-right: 2;
+    background-color: rgba(0, 0, 0, 0.75);
+    border-color: #ffcc00;
+    border-width: 0.08;
+    border-radius: 0.6;
+    justify-content: center;
+  }
+  .toast-text {
+    font-size: 2.2;
+    color: #ffcc00;
+    font-weight: bold;
+  }
+</style>
+<div class="toast-panel">
+  <span id="toast-text" class="toast-text">NICE!</span>
+</div>

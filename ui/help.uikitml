@@ -1,0 +1,74 @@
+<style>
+  .help-panel {
+    display: flex;
+    flex-direction: column;
+    padding-top: 2;
+    padding-bottom: 2;
+    padding-left: 2;
+    padding-right: 2;
+    background-color: rgba(0, 0, 0, 0.9);
+    border-color: #00ffff;
+    border-width: 0.12;
+    border-radius: 1.2;
+  }
+  .help-title {
+    font-size: 3;
+    color: #00ffff;
+    font-weight: bold;
+    align-self: center;
+  }
+  .help-section {
+    font-size: 1.8;
+    color: #ffcc00;
+    margin-top: 1;
+    font-weight: bold;
+  }
+  .help-text {
+    font-size: 1.2;
+    color: #cccccc;
+    margin-top: 0.2;
+  }
+  .back-btn {
+    background-color: rgba(255, 0, 255, 0.1);
+    border-color: #ff00ff;
+    border-width: 0.06;
+    border-radius: 0.4;
+    padding-top: 0.5;
+    padding-bottom: 0.5;
+    padding-left: 2;
+    padding-right: 2;
+    margin-top: 1;
+    cursor: pointer;
+    align-self: center;
+  }
+  .back-text {
+    font-size: 1.5;
+    color: #ff00ff;
+  }
+</style>
+<div class="help-panel">
+  <span class="help-title">HOW TO PLAY</span>
+  <span class="help-section">Browser Controls</span>
+  <span class="help-text">WASD / Arrows - Move paddle</span>
+  <span class="help-text">Space (hold) - Charge serve, release to serve</span>
+  <span class="help-text">Ball auto-hits when near paddle</span>
+  <span class="help-text">ESC - Pause</span>
+  <span class="help-section">VR Controls</span>
+  <span class="help-text">Right Thumbstick - Move paddle</span>
+  <span class="help-text">Right Trigger (hold) - Charge serve</span>
+  <span class="help-text">B Button - Pause</span>
+  <span class="help-text">Laser Pointer - Menu interaction</span>
+  <span class="help-section">Rules</span>
+  <span class="help-text">First to 11, win by 2</span>
+  <span class="help-text">Serve alternates every 2 points</span>
+  <span class="help-text">Ball must bounce once on each side</span>
+  <span class="help-text">Double bounce = point for hitter</span>
+  <span class="help-section">Game Modes</span>
+  <span class="help-text">Match: Best of 5 sets</span>
+  <span class="help-text">Quick: Single set to 11</span>
+  <span class="help-text">Rally: Keep the rally alive</span>
+  <span class="help-text">Speed: 60s, max rally hits</span>
+  <span class="help-text">Serve Practice: Perfect serves</span>
+  <span class="help-text">Training: AI returns everything</span>
+  <div id="btn-back-help" class="back-btn"><span class="back-text">BACK</span></div>
+</div>

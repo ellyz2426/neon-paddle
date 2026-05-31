@@ -1,0 +1,84 @@
+<style>
+  .title-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 3;
+    padding-bottom: 3;
+    padding-left: 4;
+    padding-right: 4;
+    background-color: rgba(0, 0, 0, 0.85);
+    border-color: #00ffff;
+    border-width: 0.15;
+    border-radius: 1.5;
+  }
+  .game-title {
+    font-size: 5;
+    color: #00ffff;
+    font-weight: bold;
+  }
+  .subtitle {
+    font-size: 1.8;
+    color: #ff00ff;
+    margin-top: 0.5;
+  }
+  .btn {
+    background-color: rgba(0, 255, 255, 0.15);
+    border-color: #00ffff;
+    border-width: 0.08;
+    border-radius: 0.5;
+    padding-top: 0.8;
+    padding-bottom: 0.8;
+    padding-left: 2;
+    padding-right: 2;
+    margin-top: 0.8;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  .btn-text {
+    font-size: 2;
+    color: #00ffff;
+    font-weight: bold;
+  }
+  .btn-row {
+    display: flex;
+    flex-direction: row;
+    gap: 1;
+    margin-top: 0.5;
+    width: 100%;
+  }
+  .btn-small {
+    background-color: rgba(0, 255, 255, 0.1);
+    border-color: #00ffff;
+    border-width: 0.06;
+    border-radius: 0.4;
+    padding-top: 0.5;
+    padding-bottom: 0.5;
+    padding-left: 1;
+    padding-right: 1;
+    cursor: pointer;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+  .btn-small-text {
+    font-size: 1.4;
+    color: #00cccc;
+  }
+</style>
+<div class="title-panel">
+  <span class="game-title">NEON PADDLE</span>
+  <span class="subtitle">VR Table Tennis</span>
+  <div id="btn-play" class="btn"><span class="btn-text">PLAY</span></div>
+  <div class="btn-row">
+    <div id="btn-leaderboard" class="btn-small"><span class="btn-small-text">SCORES</span></div>
+    <div id="btn-achievements" class="btn-small"><span class="btn-small-text">ACHIEVE</span></div>
+    <div id="btn-stats" class="btn-small"><span class="btn-small-text">STATS</span></div>
+  </div>
+  <div class="btn-row">
+    <div id="btn-settings" class="btn-small"><span class="btn-small-text">SETTINGS</span></div>
+    <div id="btn-help" class="btn-small"><span class="btn-small-text">HELP</span></div>
+  </div>
+</div>

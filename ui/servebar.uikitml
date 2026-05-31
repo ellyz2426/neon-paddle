@@ -1,0 +1,27 @@
+<style>
+  .serve-panel {
+    display: flex;
+    flex-direction: row;
+    padding-top: 0.5;
+    padding-bottom: 0.5;
+    padding-left: 1;
+    padding-right: 1;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-color: #33ff33;
+    border-width: 0.06;
+    border-radius: 0.4;
+  }
+  .serve-label {
+    font-size: 1.2;
+    color: #33ff33;
+  }
+  .serve-bar {
+    font-size: 1.4;
+    color: #33ff33;
+    font-weight: bold;
+  }
+</style>
+<div class="serve-panel">
+  <span class="serve-label">POWER </span>
+  <span id="serve-power" class="serve-bar">..........</span>
+</div>

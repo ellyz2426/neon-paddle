@@ -1,0 +1,99 @@
+<style>
+  .settings-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 2;
+    padding-bottom: 2;
+    padding-left: 3;
+    padding-right: 3;
+    background-color: rgba(0, 0, 0, 0.9);
+    border-color: #00ffff;
+    border-width: 0.12;
+    border-radius: 1.2;
+  }
+  .settings-title {
+    font-size: 3;
+    color: #00ffff;
+    font-weight: bold;
+  }
+  .setting-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    margin-top: 0.6;
+  }
+  .setting-label {
+    font-size: 1.5;
+    color: #aaaaaa;
+    width: 35%;
+  }
+  .setting-val {
+    font-size: 1.5;
+    color: #00ffff;
+    width: 30%;
+    text-align: center;
+  }
+  .setting-btn {
+    background-color: rgba(0, 255, 255, 0.15);
+    border-color: #00ffff;
+    border-width: 0.06;
+    border-radius: 0.3;
+    padding-top: 0.3;
+    padding-bottom: 0.3;
+    padding-left: 0.8;
+    padding-right: 0.8;
+    cursor: pointer;
+    margin-left: 0.3;
+    margin-right: 0.3;
+  }
+  .setting-btn-text {
+    font-size: 1.5;
+    color: #00ffff;
+  }
+  .back-btn {
+    background-color: rgba(255, 0, 255, 0.1);
+    border-color: #ff00ff;
+    border-width: 0.06;
+    border-radius: 0.4;
+    padding-top: 0.5;
+    padding-bottom: 0.5;
+    padding-left: 2;
+    padding-right: 2;
+    margin-top: 1.5;
+    cursor: pointer;
+  }
+  .back-text {
+    font-size: 1.5;
+    color: #ff00ff;
+  }
+</style>
+<div class="settings-panel">
+  <span class="settings-title">SETTINGS</span>
+  <div class="setting-row">
+    <span class="setting-label">SFX</span>
+    <div id="btn-sfx-down" class="setting-btn"><span class="setting-btn-text">-</span></div>
+    <span id="sfx-val" class="setting-val">80%</span>
+    <div id="btn-sfx-up" class="setting-btn"><span class="setting-btn-text">+</span></div>
+  </div>
+  <div class="setting-row">
+    <span class="setting-label">MUSIC</span>
+    <div id="btn-music-down" class="setting-btn"><span class="setting-btn-text">-</span></div>
+    <span id="music-val" class="setting-val">50%</span>
+    <div id="btn-music-up" class="setting-btn"><span class="setting-btn-text">+</span></div>
+  </div>
+  <div class="setting-row">
+    <span class="setting-label">THEME</span>
+    <div id="btn-theme-prev" class="setting-btn"><span class="setting-btn-text">&lt;</span></div>
+    <span id="theme-name" class="setting-val">Holodeck</span>
+    <div id="btn-theme-next" class="setting-btn"><span class="setting-btn-text">&gt;</span></div>
+  </div>
+  <div class="setting-row">
+    <span class="setting-label">PADDLE</span>
+    <div id="btn-skin-prev" class="setting-btn"><span class="setting-btn-text">&lt;</span></div>
+    <span id="skin-name" class="setting-val">Neon Cyan</span>
+    <div id="btn-skin-next" class="setting-btn"><span class="setting-btn-text">&gt;</span></div>
+  </div>
+  <div id="btn-back-settings" class="back-btn"><span class="back-text">BACK</span></div>
+</div>

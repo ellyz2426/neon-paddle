@@ -1,0 +1,126 @@
+{
+  "element": {
+    "type": "container",
+    "sourceTag": "div",
+    "children": [
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "POWER"
+        ],
+        "properties": {
+          "class": "serve-label"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          ".........."
+        ],
+        "properties": {
+          "id": "serve-power",
+          "class": "serve-bar"
+        },
+        "dataUid": "uid-3"
+      }
+    ],
+    "properties": {
+      "class": "serve-panel"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {
+    "serve-panel": {
+      "content": {
+        "display": "flex",
+        "flexDirection": "row",
+        "paddingTop": "0.5",
+        "paddingBottom": "0.5",
+        "paddingLeft": "1",
+        "paddingRight": "1",
+        "backgroundColor": "rgba(0, 0, 0, 0.6)",
+        "borderColor": "#33ff33",
+        "borderWidth": "0.06",
+        "borderRadius": 0.4
+      }
+    },
+    "serve-label": {
+      "content": {
+        "fontSize": "1.2",
+        "color": "#33ff33"
+      }
+    },
+    "serve-bar": {
+      "content": {
+        "fontSize": "1.4",
+        "color": "#33ff33",
+        "fontWeight": "bold"
+      }
+    }
+  },
+  "ranges": {
+    "serve-panel": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 14
+      }
+    },
+    "serve-label": {
+      "start": {
+        "line": 13,
+        "column": 2
+      },
+      "end": {
+        "line": 13,
+        "column": 14
+      }
+    },
+    "serve-bar": {
+      "start": {
+        "line": 17,
+        "column": 2
+      },
+      "end": {
+        "line": 17,
+        "column": 12
+      }
+    },
+    "uid-1": {
+      "start": {
+        "line": 23,
+        "column": 0
+      },
+      "end": {
+        "line": 26,
+        "column": 6
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 24,
+        "column": 2
+      },
+      "end": {
+        "line": 24,
+        "column": 41
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 25,
+        "column": 2
+      },
+      "end": {
+        "line": 25,
+        "column": 60
+      }
+    }
+  }
+}

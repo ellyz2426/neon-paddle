@@ -1,0 +1,69 @@
+<style>
+  .stats-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 2;
+    padding-bottom: 2;
+    padding-left: 3;
+    padding-right: 3;
+    background-color: rgba(0, 0, 0, 0.9);
+    border-color: #00ffff;
+    border-width: 0.12;
+    border-radius: 1.2;
+  }
+  .stats-title {
+    font-size: 3;
+    color: #00ffff;
+    font-weight: bold;
+  }
+  .stat-row {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    margin-top: 0.4;
+    padding-top: 0.2;
+    padding-bottom: 0.2;
+    padding-left: 0.5;
+    padding-right: 0.5;
+  }
+  .stat-label {
+    font-size: 1.4;
+    color: #aaaaaa;
+    width: 60%;
+  }
+  .stat-val {
+    font-size: 1.4;
+    color: #00ffff;
+    width: 40%;
+    font-weight: bold;
+  }
+  .back-btn {
+    background-color: rgba(255, 0, 255, 0.1);
+    border-color: #ff00ff;
+    border-width: 0.06;
+    border-radius: 0.4;
+    padding-top: 0.5;
+    padding-bottom: 0.5;
+    padding-left: 2;
+    padding-right: 2;
+    margin-top: 1;
+    cursor: pointer;
+  }
+  .back-text {
+    font-size: 1.5;
+    color: #ff00ff;
+  }
+</style>
+<div class="stats-panel">
+  <span class="stats-title">CAREER STATS</span>
+  <div class="stat-row"><span class="stat-label">Games Played</span><span id="stat-games" class="stat-val">0</span></div>
+  <div class="stat-row"><span class="stat-label">Games Won</span><span id="stat-wins" class="stat-val">0</span></div>
+  <div class="stat-row"><span class="stat-label">Win Rate</span><span id="stat-winrate" class="stat-val">0%</span></div>
+  <div class="stat-row"><span class="stat-label">Total Aces</span><span id="stat-aces" class="stat-val">0</span></div>
+  <div class="stat-row"><span class="stat-label">Total Smashes</span><span id="stat-smashes" class="stat-val">0</span></div>
+  <div class="stat-row"><span class="stat-label">Longest Rally</span><span id="stat-longrally" class="stat-val">0</span></div>
+  <div class="stat-row"><span class="stat-label">Points Won</span><span id="stat-points" class="stat-val">0</span></div>
+  <div class="stat-row"><span class="stat-label">Achievements</span><span id="stat-achievements" class="stat-val">0/20</span></div>
+  <div id="btn-back-stats" class="back-btn"><span class="back-text">BACK</span></div>
+</div>

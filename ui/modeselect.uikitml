@@ -1,0 +1,71 @@
+<style>
+  .mode-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 2;
+    padding-bottom: 2;
+    padding-left: 3;
+    padding-right: 3;
+    background-color: rgba(0, 0, 0, 0.85);
+    border-color: #00ffff;
+    border-width: 0.12;
+    border-radius: 1.2;
+  }
+  .mode-title {
+    font-size: 3;
+    color: #00ffff;
+    font-weight: bold;
+  }
+  .mode-btn {
+    background-color: rgba(0, 255, 255, 0.12);
+    border-color: #00ffff;
+    border-width: 0.06;
+    border-radius: 0.4;
+    padding-top: 0.6;
+    padding-bottom: 0.6;
+    padding-left: 2;
+    padding-right: 2;
+    margin-top: 0.6;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .mode-name {
+    font-size: 1.8;
+    color: #00ffff;
+    font-weight: bold;
+  }
+  .mode-desc {
+    font-size: 1.1;
+    color: #888888;
+  }
+  .back-btn {
+    background-color: rgba(255, 0, 255, 0.1);
+    border-color: #ff00ff;
+    border-width: 0.06;
+    border-radius: 0.4;
+    padding-top: 0.5;
+    padding-bottom: 0.5;
+    padding-left: 2;
+    padding-right: 2;
+    margin-top: 1;
+    cursor: pointer;
+  }
+  .back-text {
+    font-size: 1.5;
+    color: #ff00ff;
+  }
+</style>
+<div class="mode-panel">
+  <span class="mode-title">SELECT MODE</span>
+  <div id="btn-mode-0" class="mode-btn"><span class="mode-name">MATCH</span><span class="mode-desc">Best of 5 sets to 11</span></div>
+  <div id="btn-mode-1" class="mode-btn"><span class="mode-name">QUICK MATCH</span><span class="mode-desc">Single set to 11</span></div>
+  <div id="btn-mode-2" class="mode-btn"><span class="mode-name">RALLY MODE</span><span class="mode-desc">Keep the rally going</span></div>
+  <div id="btn-mode-3" class="mode-btn"><span class="mode-name">SPEED RALLY</span><span class="mode-desc">60 seconds, max hits</span></div>
+  <div id="btn-mode-4" class="mode-btn"><span class="mode-name">SERVE PRACTICE</span><span class="mode-desc">Perfect your serve</span></div>
+  <div id="btn-mode-5" class="mode-btn"><span class="mode-name">TRAINING</span><span class="mode-desc">AI returns everything</span></div>
+  <div id="btn-back-mode" class="back-btn"><span class="back-text">BACK</span></div>
+</div>
