@@ -1,0 +1,7 @@
+<panel>
+  <row gap="4" align="center" padding="4">
+    <text id="wind-icon" fontSize="14" color="#ffaa00">💨</text>
+    <text id="wind-dir" fontSize="12" color="#ffffff">←</text>
+    <text id="wind-speed" fontSize="12" color="#aaaaaa">Mild</text>
+  </row>
+</panel>

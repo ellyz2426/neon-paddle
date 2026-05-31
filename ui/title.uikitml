@@ -80,5 +80,6 @@
   <div class="btn-row">
     <div id="btn-settings" class="btn-small"><span class="btn-small-text">SETTINGS</span></div>
     <div id="btn-help" class="btn-small"><span class="btn-small-text">HELP</span></div>
+    <div id="btn-tutorial" class="btn-small"><span class="btn-small-text">TUTORIAL</span></div>
   </div>
 </div>

@@ -13,7 +13,7 @@ import {
   GameStateManager, BallState, TABLE_LENGTH, TABLE_WIDTH, TABLE_HEIGHT,
   NET_HEIGHT, BALL_RADIUS, PADDLE_RADIUS, PADDLE_THICKNESS, TABLE_EDGE_WIDTH,
   THEMES, DIFFICULTIES, GAME_MODES, PADDLE_SKINS, DRILLS,
-  TOURNAMENT_BRACKET,
+  TOURNAMENT_BRACKET, getDailyModifiers, TUTORIAL_STEPS, DailyModifier,
 } from './types.js';
 import { AudioManager } from './audio.js';
 
@@ -103,6 +103,18 @@ const RALLY_SHOW_THRESHOLD = 3;
 // Match point banner
 let matchPointShown = false;
 
+// Power paddle glow
+let powerGlowMesh: Mesh | null = null;
+
+// Active daily modifiers for current game
+let activeDailyMods: DailyModifier[] = [];
+
+// Wind particles for visual indicator
+let windParticles: { mesh: Mesh; vel: Vector3; life: number }[] = [];
+
+// Ghost ball opacity tracking
+let ghostBallOpacity = 1.0;
+
 // === ENTRY ===
 async function main() {
   const container = document.getElementById('app') as HTMLDivElement;
@@ -133,6 +145,7 @@ async function main() {
   createBallShadow();
   createSpinVisualization();
   createTrail();
+  createPowerGlow();
   setupUI();
   showUI('title');
 
@@ -517,6 +530,19 @@ function setupDrillTargets() {
   });
 }
 
+// === POWER PADDLE GLOW ===
+function createPowerGlow() {
+  const geo = new SphereGeometry(PADDLE_RADIUS * 2.5, 12, 12);
+  const mat = new MeshBasicMaterial({
+    color: 0x00ffff,
+    transparent: true,
+    opacity: 0.0,
+    blending: AdditiveBlending,
+  });
+  powerGlowMesh = new Mesh(geo, mat);
+  playerPaddle.add(powerGlowMesh);
+}
+
 // === UI SETUP ===
 function setupUI() {
   const panels = [
@@ -540,6 +566,12 @@ function setupUI() {
     { name: 'drillhud', config: '/ui/drillhud.json', maxWidth: 0.3, maxHeight: 0.15, type: 'follower', offset: [-0.2, 0.15, -0.5] },
     { name: 'rallycounter', config: '/ui/rallycounter.json', maxWidth: 0.12, maxHeight: 0.1, type: 'follower', offset: [0, 0.08, -0.4] },
     { name: 'matchpoint', config: '/ui/matchpoint.json', maxWidth: 0.35, maxHeight: 0.1, type: 'follower', offset: [0, -0.12, -0.5] },
+    // Daily challenge panels
+    { name: 'daily', config: '/ui/daily.json', maxWidth: 0.7, maxHeight: 0.7, pos: [0, TABLE_HEIGHT + 0.7, -0.5], type: 'world' },
+    // Tutorial panel
+    { name: 'tutorial', config: '/ui/tutorial.json', maxWidth: 0.65, maxHeight: 0.6, pos: [0, TABLE_HEIGHT + 0.7, -0.4], type: 'world' },
+    // Wind indicator
+    { name: 'windind', config: '/ui/windind.json', maxWidth: 0.15, maxHeight: 0.06, type: 'follower', offset: [0.25, -0.1, -0.5] },
   ];
 
   panels.forEach(p => {
@@ -582,6 +614,7 @@ function showUI(state: GameState) {
     'title', 'modeselect', 'difficulty', 'hud', 'servebar', 'toast', 'countdown',
     'pause', 'gameover', 'leaderboard', 'achievements', 'settings', 'help', 'stats',
     'tournament_bracket', 'drills', 'drillhud', 'rallycounter', 'matchpoint',
+    'daily', 'tutorial', 'windind',
   ];
 
   allPanels.forEach(name => {
@@ -606,6 +639,8 @@ function showUI(state: GameState) {
     case 'tournament_bracket': showPanels.push('tournament_bracket'); break;
     case 'drills': showPanels.push('drills'); break;
     case 'drill_active': showPanels.push('drillhud'); break;
+    case 'daily_challenge': showPanels.push('daily'); break;
+    case 'tutorial': showPanels.push('tutorial'); break;
   }
 
   showPanels.forEach(name => {
@@ -679,13 +714,33 @@ function updatePanelContent(state: GameState) {
           : `Score: ${gsm.playerScore} - ${gsm.aiScore}`);
         setText(doc, 'result-rally', `Best Rally: ${gsm.bestRally}`);
         setText(doc, 'result-streak', `Best Streak: ${gsm.bestStreak}`);
-        setText(doc, 'result-aces', `Aces: ${gsm.aces}`);
-        setText(doc, 'result-mode', gsm.mode.toUpperCase());
+        setText(doc, 'result-aces', `Aces: ${gsm.aces} | Smashes: ${gsm.smashes}`);
+        setText(doc, 'result-mode', gsm.mode === 'daily'
+          ? `DAILY ${activeDailyMods.map(m => m.icon).join(' ')}`
+          : gsm.mode.toUpperCase());
       }
       break;
     }
     case 'tournament_bracket': {
       updateTournamentBracket();
+      break;
+    }
+    case 'daily_challenge': {
+      const doc = getDoc('daily');
+      if (doc) {
+        const today = new Date().toISOString().split('T')[0];
+        const mods = getDailyModifiers(today);
+        setText(doc, 'daily-date', today);
+        setText(doc, 'daily-mod-1', mods[0] ? `${mods[0].icon} ${mods[0].name} — ${mods[0].description}` : '');
+        setText(doc, 'daily-mod-2', mods[1] ? `${mods[1].icon} ${mods[1].name} — ${mods[1].description}` : '');
+        setText(doc, 'daily-mod-3', mods.length === 1 ? 'Single modifier today!' : 'Double modifier!');
+        const saved = localStorage.getItem('neon-paddle-daily-' + today);
+        setText(doc, 'daily-best', saved ? saved : 'No attempt yet');
+      }
+      break;
+    }
+    case 'tutorial': {
+      updateTutorialContent();
       break;
     }
   }
@@ -708,6 +763,18 @@ function updateTournamentBracket() {
   }
 }
 
+function updateTutorialContent() {
+  const doc = getDoc('tutorial');
+  if (!doc) return;
+  const step = TUTORIAL_STEPS[gsm.tutorialStep];
+  if (!step) return;
+  setText(doc, 'tut-step', `Step ${gsm.tutorialStep + 1}/${TUTORIAL_STEPS.length}`);
+  setText(doc, 'tut-heading', step.heading);
+  setText(doc, 'tut-line1', step.lines[0] || '');
+  setText(doc, 'tut-line2', step.lines[1] || '');
+  setText(doc, 'tut-line3', step.lines[2] || '');
+}
+
 // === UI EVENT BINDING ===
 function bindUIEvents() {
   // Title
@@ -717,6 +784,7 @@ function bindUIEvents() {
   bindButton('title', 'btn-settings', () => { audio.playClick(); showUI('settings'); });
   bindButton('title', 'btn-help', () => { audio.playClick(); showUI('help'); });
   bindButton('title', 'btn-stats', () => { audio.playClick(); showUI('stats'); });
+  bindButton('title', 'btn-tutorial', () => { audio.playClick(); gsm.tutorialStep = 0; showUI('tutorial'); });
 
   // Mode select
   GAME_MODES.forEach((mode, i) => {
@@ -730,6 +798,8 @@ function bindUIEvents() {
       if (mode.id === 'tournament') {
         gsm.initTournament();
         showUI('tournament_bracket');
+      } else if (mode.id === 'daily') {
+        showUI('daily_challenge');
       } else if (mode.id === 'training' || mode.id === 'rally' || mode.id === 'speed') {
         startGame(1);
       } else {
@@ -762,9 +832,34 @@ function bindUIEvents() {
   bindButton('gameover', 'btn-title', () => { audio.playClick(); showUI('title'); });
 
   // Back buttons
-  ['leaderboard', 'achievements', 'settings', 'help', 'stats', 'tournament_bracket', 'drills'].forEach(panel => {
+  ['leaderboard', 'achievements', 'settings', 'help', 'stats', 'tournament_bracket', 'drills', 'daily'].forEach(panel => {
     bindButton(panel, `btn-back-${panel}`, () => { audio.playClick(); showUI('title'); });
   });
+
+  // Daily challenge play
+  bindButton('daily', 'btn-daily-play', () => {
+    audio.playClick();
+    startDailyChallenge();
+  });
+
+  // Tutorial navigation
+  bindButton('tutorial', 'btn-tut-next', () => {
+    audio.playClick();
+    gsm.tutorialStep++;
+    if (gsm.tutorialStep >= TUTORIAL_STEPS.length) {
+      showUI('title');
+    } else {
+      updateTutorialContent();
+    }
+  });
+  bindButton('tutorial', 'btn-tut-prev', () => {
+    audio.playClick();
+    if (gsm.tutorialStep > 0) {
+      gsm.tutorialStep--;
+      updateTutorialContent();
+    }
+  });
+  bindButton('tutorial', 'btn-tut-skip', () => { audio.playClick(); showUI('title'); });
 
   // Tournament play
   bindButton('tournament_bracket', 'btn-tournament-play', () => {
@@ -995,6 +1090,70 @@ function updateDrill(dt: number) {
   }
 }
 
+// === DAILY CHALLENGE ===
+function startDailyChallenge() {
+  const today = new Date().toISOString().split('T')[0];
+  activeDailyMods = getDailyModifiers(today);
+  gsm.dailyDate = today;
+  gsm.mode = 'daily';
+  gsm.setsToWin = 1;
+
+  // Apply modifiers
+  activeDailyMods.forEach(mod => {
+    switch (mod.id) {
+      case 'wind':
+        gsm.windForce = 1.5 + Math.random() * 1.5;
+        gsm.windDirection = Math.random() * Math.PI * 2;
+        break;
+      case 'ghost_ball':
+        gsm.ghostBallActive = true;
+        break;
+      case 'sudden_death':
+        // Handled in scoring - first to 5
+        break;
+    }
+  });
+
+  // Show wind indicator if wind is active
+  if (activeDailyMods.some(m => m.id === 'wind')) {
+    const windEntity = uiEntities.get('windind');
+    if (windEntity && windEntity.object3D) windEntity.object3D.visible = true;
+    const doc = getDoc('windind');
+    const windAngle = gsm.windDirection;
+    const dir = windAngle < Math.PI ? '→' : '←';
+    setText(doc, 'wind-dir', dir);
+    setText(doc, 'wind-speed', gsm.windForce > 2.0 ? 'Strong' : 'Mild');
+  }
+
+  const diffLevel = activeDailyMods.some(m => m.id === 'turbo_ai') ? 2 : 1;
+  startGame(diffLevel);
+}
+
+function getDailyPaddleScale(): number {
+  if (activeDailyMods.some(m => m.id === 'tiny_paddle')) return 0.6;
+  return 1.0;
+}
+
+function getDailyBallScale(): number {
+  if (activeDailyMods.some(m => m.id === 'big_ball')) return 2.0;
+  return 1.0;
+}
+
+function getDailyGravityScale(): number {
+  if (activeDailyMods.some(m => m.id === 'low_gravity')) return 0.6;
+  return 1.0;
+}
+
+function getDailyBallSpeedScale(): number {
+  if (activeDailyMods.some(m => m.id === 'fast_ball')) return 1.5;
+  return 1.0;
+}
+
+function getDailySpinScale(): number {
+  if (activeDailyMods.some(m => m.id === 'spin_madness')) return 2.0;
+  return 1.0;
+}
+
 function endGame() {
   const playerWon = gsm.mode === 'match'
     ? gsm.playerSets > gsm.aiSets
@@ -1004,6 +1163,26 @@ function endGame() {
   if (gsm.mode === 'tournament') {
     endTournamentRound(playerWon);
     return;
+  }
+
+  // Handle daily challenge completion
+  if (gsm.mode === 'daily') {
+    gsm.unlockAchievement('daily');
+    const today = new Date().toISOString().split('T')[0];
+    const scoreStr = `${gsm.playerScore}-${gsm.aiScore}`;
+    const prevBest = localStorage.getItem('neon-paddle-daily-' + today);
+    if (!prevBest || gsm.playerScore > parseInt(prevBest)) {
+      localStorage.setItem('neon-paddle-daily-' + today, scoreStr);
+    }
+    // Daily modifier achievements
+    if (playerWon) {
+      if (activeDailyMods.some(m => m.id === 'wind')) gsm.unlockAchievement('wind_master');
+      if (activeDailyMods.some(m => m.id === 'ghost_ball')) gsm.unlockAchievement('ghost_win');
+    }
+    // Clear daily modifiers
+    activeDailyMods = [];
+    gsm.windForce = 0;
+    gsm.ghostBallActive = false;
   }
 
   gsm.gamesPlayed++;
@@ -1037,6 +1216,10 @@ function endGame() {
   // Stop deuce drone
   audio.stopDeuceDrone();
   slowMoTimeScale = 1.0;
+
+  // Hide wind indicator
+  const windEntity = uiEntities.get('windind');
+  if (windEntity && windEntity.object3D) windEntity.object3D.visible = false;
 
   if (playerWon) audio.playWin(); else audio.playLose();
 
@@ -1359,13 +1542,17 @@ function handleInput(dt: number) {
       const entity = uiEntities.get('servebar');
       if (entity && entity.object3D) entity.object3D.visible = false;
 
-      const power = 2 + serveCharge * 5;
+      const speedScale = getDailyBallSpeedScale();
+      const spinMult = getDailySpinScale();
+      // Power serves modifier forces max charge
+      const charge = activeDailyMods.some(m => m.id === 'power_serves') ? 1.0 : serveCharge;
+      const power = (2 + charge * 5) * speedScale;
       const sideAim = (playerPaddlePos.x - ball.position.x) * 2;
-      ball.velocity.set(sideAim, 1.5 + serveCharge * 1.5, -power);
-      ball.spin.set(2 + serveCharge * 3, (Math.random() - 0.5) * 2, 0);
+      ball.velocity.set(sideAim, 1.5 + charge * 1.5, -power);
+      ball.spin.set((2 + charge * 3) * spinMult, (Math.random() - 0.5) * 2 * spinMult, 0);
       ball.active = true;
       ball.lastHitBy = 'player';
-      audio.playPaddleHit(serveCharge, ball.spin.length());
+      audio.playPaddleHit(charge, ball.spin.length());
     }
 
     // XR trigger serve
@@ -1497,15 +1684,22 @@ function updateBallPhysics(dt: number) {
   const subDt = dt / substeps;
 
   for (let s = 0; s < substeps; s++) {
-    // Gravity
-    ball.velocity.y -= 9.81 * subDt;
+    // Gravity (with daily modifier)
+    ball.velocity.y -= 9.81 * getDailyGravityScale() * subDt;
 
     // Air resistance
     ball.velocity.multiplyScalar(1 - 0.01 * subDt);
 
-    // Spin influence on trajectory (Magnus effect)
-    ball.velocity.x += ball.spin.y * 0.3 * subDt;
-    ball.velocity.z += ball.spin.x * 0.15 * subDt;
+    // Spin influence on trajectory (Magnus effect) with daily spin scale
+    const spinScale = getDailySpinScale();
+    ball.velocity.x += ball.spin.y * 0.3 * spinScale * subDt;
+    ball.velocity.z += ball.spin.x * 0.15 * spinScale * subDt;
+
+    // Wind force (daily challenge modifier)
+    if (gsm.windForce > 0) {
+      ball.velocity.x += Math.cos(gsm.windDirection) * gsm.windForce * subDt;
+      ball.velocity.z += Math.sin(gsm.windDirection) * gsm.windForce * 0.3 * subDt;
+    }
 
     // Update position
     ball.position.addScaledVector(ball.velocity, subDt);
@@ -1742,6 +1936,18 @@ function updateTrail() {
     positions[idx + 5] = trailPoints[i + 1].z;
   }
   trailLine.geometry.attributes.position.needsUpdate = true;
+
+  // Speed-based trail color: blue (slow) → cyan → yellow → red (fast)
+  if (ball.active) {
+    const speed = ball.velocity.length();
+    let trailColor: number;
+    if (speed < 3) trailColor = 0x4488ff; // blue
+    else if (speed < 5) trailColor = gsm.getTheme().accent; // theme accent
+    else if (speed < 8) trailColor = 0xffaa00; // orange/yellow
+    else trailColor = 0xff3300; // red
+    (trailLine.material as LineBasicMaterial).color.set(trailColor);
+    (trailLine.material as LineBasicMaterial).opacity = Math.min(0.3 + speed * 0.05, 0.7);
+  }
 }
 
 function scorePoint(winner: 'player' | 'ai', reason: string) {
@@ -1829,12 +2035,18 @@ function scorePoint(winner: 'player' | 'ai', reason: string) {
 
   // Check set win
   const setWinner = gsm.checkSetWin();
-  if (setWinner) {
-    if (gsm.mode === 'quick' || gsm.mode === 'tournament') {
+  // Daily challenge sudden death: first to 5
+  const dailySuddenDeath = activeDailyMods.some(m => m.id === 'sudden_death');
+  const suddenDeathWinner = dailySuddenDeath && (gsm.playerScore >= 5 || gsm.aiScore >= 5)
+    ? (gsm.playerScore >= 5 ? 'player' : 'ai') as 'player' | 'ai'
+    : null;
+  const effectiveSetWinner = suddenDeathWinner || setWinner;
+  if (effectiveSetWinner) {
+    if (gsm.mode === 'quick' || gsm.mode === 'tournament' || gsm.mode === 'daily') {
       endGame();
       return;
     }
-    gsm.wonSet(setWinner);
+    gsm.wonSet(effectiveSetWinner);
     audio.playSetWin();
     showToast(`SET: ${gsm.playerSets} - ${gsm.aiSets}`);
     matchPointShown = false;
@@ -1908,6 +2120,86 @@ function updateAI(dt: number) {
 // === VISUALS ===
 function updateVisuals(dt: number) {
   playerPaddle.position.copy(playerPaddlePos);
+
+  // Power paddle glow — brighter when paddle moves fast
+  if (powerGlowMesh) {
+    const paddleSpeed = playerPaddlePos.clone().sub(lastPlayerPaddlePos).length() / Math.max(dt, 0.001);
+    const glowIntensity = Math.min(paddleSpeed * 0.1, 0.5);
+    (powerGlowMesh.material as MeshBasicMaterial).opacity = glowIntensity;
+    if (glowIntensity > 0.2) {
+      // Color shifts from cyan to hot white at high speed
+      const hue = Math.max(0, 1 - glowIntensity * 1.5);
+      const r = 1.0;
+      const g = hue;
+      const b = hue;
+      (powerGlowMesh.material as MeshBasicMaterial).color.setRGB(r, g, b);
+    } else {
+      (powerGlowMesh.material as MeshBasicMaterial).color.set(gsm.getTheme().accent);
+    }
+  }
+
+  // Ghost ball effect — ball fades based on speed
+  if (gsm.ghostBallActive && ball.active) {
+    const speed = ball.velocity.length();
+    ghostBallOpacity = Math.max(0.15, 1.0 - speed * 0.08);
+    ballMesh.children.forEach(child => {
+      if ((child as Mesh).material && (child as Mesh).material instanceof MeshStandardMaterial) {
+        ((child as Mesh).material as MeshStandardMaterial).opacity = ghostBallOpacity;
+        ((child as Mesh).material as MeshStandardMaterial).transparent = true;
+      }
+    });
+  }
+
+  // Daily paddle scale
+  const pScale = getDailyPaddleScale();
+  if (pScale !== 1.0) {
+    playerPaddle.scale.set(pScale, pScale, pScale);
+  }
+
+  // Daily ball scale
+  const bScale = getDailyBallScale();
+  if (bScale !== 1.0) {
+    ballMesh.scale.set(bScale, bScale, bScale);
+  }
+
+  // Wind particles visual
+  if (gsm.windForce > 0 && ball.active) {
+    spawnWindParticle();
+  }
+  updateWindParticles(dt);
+}
+
+function spawnWindParticle() {
+  if (windParticles.length >= 15 || Math.random() > 0.1) return;
+  const theme = gsm.getTheme();
+  const geo = new SphereGeometry(0.005, 3, 3);
+  const mat = new MeshBasicMaterial({ color: 0xaaddff, transparent: true, opacity: 0.3 });
+  const mesh = new Mesh(geo, mat);
+  mesh.position.set(
+    ball.position.x + (Math.random() - 0.5) * 0.5,
+    ball.position.y + (Math.random() - 0.5) * 0.3,
+    ball.position.z + (Math.random() - 0.5) * 0.5
+  );
+  world.scene.add(mesh);
+  const vel = new Vector3(
+    Math.cos(gsm.windDirection) * gsm.windForce * 0.5,
+    (Math.random() - 0.5) * 0.2,
+    Math.sin(gsm.windDirection) * gsm.windForce * 0.3
+  );
+  windParticles.push({ mesh, vel, life: 1.0 });
+}
+
+function updateWindParticles(dt: number) {
+  for (let i = windParticles.length - 1; i >= 0; i--) {
+    const p = windParticles[i];
+    p.mesh.position.addScaledVector(p.vel, dt);
+    p.life -= dt * 2;
+    (p.mesh.material as MeshBasicMaterial).opacity = p.life * 0.3;
+    if (p.life <= 0) {
+      world.scene.remove(p.mesh);
+      windParticles.splice(i, 1);
+    }
+  }
 }
 
 // === HUD ===

@@ -1,0 +1,20 @@
+<panel>
+  <col gap="8" align="center" padding="16">
+    <text id="daily-title" fontSize="28" fontWeight="bold" color="#00ffff">DAILY CHALLENGE</text>
+    <text id="daily-date" fontSize="14" color="#aaaaaa">---</text>
+    <col gap="4" align="center" padding="8">
+      <text id="daily-mod-label" fontSize="16" color="#ffaa00">TODAY'S MODIFIERS</text>
+      <text id="daily-mod-1" fontSize="14" color="#ffffff">---</text>
+      <text id="daily-mod-2" fontSize="14" color="#ffffff">---</text>
+      <text id="daily-mod-3" fontSize="12" color="#888888">---</text>
+    </col>
+    <col gap="4" align="center" padding="8">
+      <text id="daily-best-label" fontSize="14" color="#888888">TODAY'S BEST</text>
+      <text id="daily-best" fontSize="22" fontWeight="bold" color="#33ff88">---</text>
+    </col>
+    <row gap="12" align="center">
+      <text id="btn-daily-play" fontSize="18" fontWeight="bold" color="#00ff88">[ PLAY ]</text>
+      <text id="btn-back-daily" fontSize="16" color="#888888">[ BACK ]</text>
+    </row>
+  </col>
+</panel>

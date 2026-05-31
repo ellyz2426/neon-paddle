@@ -5,7 +5,57 @@ import { Vector3 } from '@iwsdk/core';
 export type GameState = 'title' | 'modeselect' | 'difficulty' | 'playing' | 'paused' | 'gameover'
   | 'leaderboard' | 'achievements' | 'settings' | 'help' | 'stats' | 'countdown'
   | 'serve_practice' | 'rally_practice' | 'tournament' | 'tournament_bracket'
-  | 'drills' | 'drill_active';
+  | 'drills' | 'drill_active' | 'daily_challenge' | 'tutorial';
+
+// === DAILY CHALLENGE MODIFIERS ===
+export interface DailyModifier {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+}
+
+export const DAILY_MODIFIERS: DailyModifier[] = [
+  { id: 'fast_ball', name: 'Fast Ball', description: 'Ball speed +50%', icon: '⚡' },
+  { id: 'tiny_paddle', name: 'Tiny Paddle', description: 'Your paddle is smaller', icon: '🔍' },
+  { id: 'big_ball', name: 'Big Ball', description: 'Ball is 2x size', icon: '🎱' },
+  { id: 'wind', name: 'Wind', description: 'Wind pushes the ball sideways', icon: '💨' },
+  { id: 'power_serves', name: 'Power Serves', description: 'All serves are max power', icon: '🔥' },
+  { id: 'low_gravity', name: 'Low Gravity', description: 'Reduced gravity (-40%)', icon: '🌙' },
+  { id: 'spin_madness', name: 'Spin Madness', description: 'Extra spin on every shot', icon: '🌀' },
+  { id: 'sudden_death', name: 'Sudden Death', description: 'First to 5 points', icon: '💀' },
+  { id: 'turbo_ai', name: 'Turbo AI', description: 'AI is faster', icon: '🤖' },
+  { id: 'ghost_ball', name: 'Ghost Ball', description: 'Ball fades while moving', icon: '👻' },
+];
+
+export function getDailyModifiers(dateStr: string): DailyModifier[] {
+  // Deterministic daily seed from date string
+  let hash = 0;
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
+    hash |= 0;
+  }
+  hash = Math.abs(hash);
+  const idx1 = hash % DAILY_MODIFIERS.length;
+  const idx2 = (hash * 7 + 13) % DAILY_MODIFIERS.length;
+  const mods = [DAILY_MODIFIERS[idx1]];
+  if (idx2 !== idx1) mods.push(DAILY_MODIFIERS[idx2]);
+  return mods;
+}
+
+// === TUTORIAL STEPS ===
+export interface TutorialStep {
+  heading: string;
+  lines: string[];
+}
+
+export const TUTORIAL_STEPS: TutorialStep[] = [
+  { heading: 'MOVEMENT', lines: ['Keyboard: WASD or Arrow keys', 'VR: Right thumbstick', 'Move your paddle left/right'] },
+  { heading: 'SERVING', lines: ['Keyboard: Hold SPACE to charge', 'VR: Hold Trigger to charge', 'Release to serve!'] },
+  { heading: 'HITTING', lines: ['Move paddle into the ball path', 'Paddle speed = return power', 'Aim with paddle position'] },
+  { heading: 'SPIN & POWER', lines: ['Fast swings = more spin', 'Elevated ball + power = SMASH', 'Spin curves the ball trajectory'] },
+  { heading: 'SCORING', lines: ['First to 11, win by 2', 'Serve alternates every 2 pts', 'Deuce at 10-10, serve every pt'] },
+];
 
 // === BALL PHYSICS ===
 export interface BallState {
@@ -49,6 +99,7 @@ export const GAME_MODES: GameMode[] = [
   { id: 'serve', name: 'SERVE PRACTICE', description: 'Perfect your serve', rounds: 0 },
   { id: 'training', name: 'TRAINING', description: 'AI returns everything', rounds: 0 },
   { id: 'tournament', name: 'TOURNAMENT', description: '4-round bracket challenge', rounds: 0 },
+  { id: 'daily', name: 'DAILY CHALLENGE', description: 'Random daily modifiers', rounds: 0 },
 ];
 
 // === DIFFICULTY ===
@@ -178,6 +229,10 @@ export function getDefaultAchievements(): Achievement[] {
     { id: 'all_skins', name: 'Collector', description: 'Try all 6 paddle skins', unlocked: false },
     // Daily
     { id: 'daily', name: 'Daily Grind', description: 'Complete a Daily Challenge', unlocked: false },
+    // Wind
+    { id: 'wind_master', name: 'Wind Master', description: 'Win a wind challenge', unlocked: false },
+    // Ghost
+    { id: 'ghost_win', name: 'Ghost Buster', description: 'Win with ghost ball', unlocked: false },
   ];
 }
 
@@ -263,6 +318,17 @@ export class GameStateManager {
 
   // Edge hits
   edgeHitsThisMatch: number = 0;
+
+  // Daily challenge
+  dailyModifiers: DailyModifier[] = [];
+  dailyBestScore: string = '';
+  dailyDate: string = '';
+  windForce: number = 0;
+  windDirection: number = 0; // radians
+  ghostBallActive: boolean = false;
+
+  // Tutorial
+  tutorialStep: number = 0;
 
   achievements: Achievement[] = getDefaultAchievements();
   leaderboard: { score: string; mode: string; difficulty: string; date: string }[] = [];

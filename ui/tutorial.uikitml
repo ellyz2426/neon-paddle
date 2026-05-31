@@ -1,0 +1,17 @@
+<panel>
+  <col gap="6" align="center" padding="12">
+    <text id="tut-title" fontSize="22" fontWeight="bold" color="#00ffff">TUTORIAL</text>
+    <text id="tut-step" fontSize="16" color="#ffaa00">Step 1/5</text>
+    <col gap="4" align="center" padding="8">
+      <text id="tut-heading" fontSize="18" fontWeight="bold" color="#ffffff">MOVEMENT</text>
+      <text id="tut-line1" fontSize="13" color="#cccccc">---</text>
+      <text id="tut-line2" fontSize="13" color="#cccccc">---</text>
+      <text id="tut-line3" fontSize="13" color="#cccccc">---</text>
+    </col>
+    <row gap="16" align="center">
+      <text id="btn-tut-prev" fontSize="16" color="#888888">[ PREV ]</text>
+      <text id="btn-tut-next" fontSize="16" fontWeight="bold" color="#00ff88">[ NEXT ]</text>
+    </row>
+    <text id="btn-tut-skip" fontSize="14" color="#666666">[ SKIP ]</text>
+  </col>
+</panel>
