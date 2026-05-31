@@ -1,6 +1,6 @@
 # 🏓 Neon Paddle VR
 
-A holodeck-style table tennis game built with IWSDK (Immersive Web SDK). Play in VR or in your browser — neon-lit regulation table, AI opponents, tournament brackets, instant replays, and procedural audio.
+A holodeck-style table tennis game built with IWSDK (Immersive Web SDK). Play in VR or in your browser — neon-lit regulation table, AI opponents with personalities, season mode, tournament brackets, instant replays, match analysis, and procedural audio.
 
 **[Play Now →](https://ellyz2426.github.io/neon-paddle/)**
 
@@ -15,7 +15,7 @@ A holodeck-style table tennis game built with IWSDK (Immersive Web SDK). Play in
 - **Net rollers** — ball barely clearing the net with dramatic sound
 - **Scoring** — first to 11, win by 2, with proper deuce and alternating serve rules
 
-### Game Modes (8)
+### Game Modes (9)
 | Mode | Description |
 |------|-------------|
 | **Match** | Best of 5 sets to 11 points |
@@ -26,12 +26,30 @@ A holodeck-style table tennis game built with IWSDK (Immersive Web SDK). Play in
 | **Training** | AI returns everything for practice |
 | **Tournament** | 4-round bracket: beat SPARK → PULSE → VORTEX → CIPHER |
 | **Daily Challenge** | Random daily modifiers for unique gameplay |
+| **Season** | 8-opponent ranked season with standings |
+
+### Season Mode
+- **8 ranked AI opponents** with distinct playstyles and titles:
+  - BYTE (The Rookie) → FLICKER (Speed Demon) → ECHO (The Wall) → PRISM (Spin Artist) → NEXUS (The Tactician) → BLITZ (Power Player) → SURGE (The Aggressive) → ZENITH (Grand Champion)
+- W/L record tracking across the full season
+- Consecutive win streak tracking with best-run persistence
+- Season-specific achievements for completion, perfection, and defeating ZENITH
 
 ### AI Opponent
 - 3 difficulty levels: Easy, Medium, Hard
 - **Advanced shot selection** — AI chooses from drives, topspin, lobs, drop shots, cross-court angles, and smashes based on situation
 - Adjustable reaction time, speed, spin reading, and aggression
 - Tournament mode features 4 unique opponents with escalating difficulty
+- Season mode features 8 distinct opponents with personality-driven stats
+
+### Match Analysis
+- **Post-match breakdown** shown after every game:
+  - Serve win rate and return win rate
+  - Aces, smashes, edge hits, net rollers
+  - Rally stats: longest, average length, total rallies, total hits
+  - Best streak, comebacks
+  - **Performance rating** and letter grade (D → S)
+  - **MVP moment** highlighting the most impressive achievement
 
 ### Daily Challenge System
 - Deterministic daily seed generates 1-2 random modifiers per day
@@ -71,7 +89,7 @@ A holodeck-style table tennis game built with IWSDK (Immersive Web SDK). Play in
 - **Holodeck environment** — neon grid floor/ceiling, floating wireframe decorations, 40 ambient particles
 - **Ball shadow** — trajectory preview projected onto the table surface
 - **Spin visualization** — rotating ring lines showing spin direction and intensity
-- **Speed-based ball trail** — blue (slow) → cyan → orange → red (fast)
+- **Speed-based ball trail** — color influenced by ball skin selection + speed
 - **Power paddle glow** — paddle emits glow proportional to swing speed, color shifts cyan→white
 - **Screen flash VFX** — dramatic flash on aces, smashes, and crucial points
 - **Particle effects** — pooled particles for hits, aces, smashes, edge hits, net rollers
@@ -98,26 +116,28 @@ A holodeck-style table tennis game built with IWSDK (Immersive Web SDK). Play in
 - 5-step guided tutorial: Movement, Serving, Hitting, Spin & Power, Scoring
 - Step-by-step navigation with skip option
 
-### Achievements (45)
-Track your progress across core gameplay, rallies, winning, streaks, special modes, career milestones, table tricks, daily challenges, and customization. Highlights:
+### Achievements (52)
+Track your progress across core gameplay, rallies, winning, streaks, special modes, career milestones, table tricks, daily challenges, customization, season, and ball variety. Highlights:
 - 🏆 **Champion** — Win the tournament
+- 🏅 **Season Champion** — Complete a full season
+- 💎 **Undefeated** — Win all 8 season matches
+- 🎯 **Apex Predator** — Defeat ZENITH in season
 - ⚡ **Unstoppable** — 10 consecutive points
 - 🏃 **Marathon** — 100-hit rally
 - 🎯 **Edge Lord** — Score on a table edge hit
-- 🔄 **Net Roller** — Ball rolls over the net
-- 🎯 **Soft Touch** — Win point after a drop shot
-- ✈️ **Sky High** — Win point on a lob return
-- 💯 **Flawless** — Win a match without losing a set
 - 🔥 **Triple Threat** — 3 aces in a row
+- 💯 **Flawless** — Win a match without losing a set
 - 🎓 **Scholar** — Complete all 4 drills
 - 🏅 **Winning Streak** — Win 5 consecutive matches
-- 💨 **Wind Master** — Win a wind challenge
-- 👻 **Ghost Buster** — Win with ghost ball
-- 🚀 **Sonic** — 100+ hits in Speed Rally
+- 🎱 **Ball Collector** — Try all 8 ball skins
+- 🎯 **Ace Barrage** — 5 aces in a single match
+- 🔄 **Versatile** — Win via ace, smash, and rally in one match
+- 💀 **Nail Biter** — Win a set 13-11 or closer
 
 ### Customization
-- **5 themes** — Holodeck, Crimson, Neon Green, Ultraviolet, Solar Blaze
+- **5 table themes** — Holodeck, Crimson, Neon Green, Ultraviolet, Solar Blaze
 - **6 paddle skins** — Neon Cyan, Inferno, Glacier, Plasma, Champion, Emerald
+- **8 ball skins** — Classic White, Plasma Pink, Solar Flare, Ice Crystal, Toxic Green, Void Purple, Chrome Silver, Inferno Red (each with unique trail colors)
 - Volume controls for SFX and music
 
 ### Persistence
@@ -125,6 +145,8 @@ Track your progress across core gameplay, rallies, winning, streaks, special mod
 - Top 20 leaderboard with scores, modes, and dates
 - Achievement progress saved to localStorage
 - Drill completion tracking
+- Season best run tracking
+- Ball skin preference persistence
 - Daily challenge best scores
 
 ## Controls
@@ -148,7 +170,7 @@ Track your progress across core gameplay, rallies, winning, streaks, special mod
 
 ## Tech Stack
 - **[IWSDK](https://iwsdk.dev)** 0.4.1 — Immersive Web SDK for WebXR
-- **PanelUI** — All game UI via 25 spatial `.uikitml` panels (zero HTML DOM overlays)
+- **PanelUI** — All game UI via 27 spatial `.uikitml` panels (zero HTML DOM overlays)
 - **Web Audio API** — Procedural sound synthesis
 - **TypeScript** — Strict mode, no runtime errors
 
@@ -157,12 +179,14 @@ Track your progress across core gameplay, rallies, winning, streaks, special mod
 neon-paddle/
 ├── src/
 │   ├── index.ts       # Main game loop, rendering, input, physics, replay, camera
-│   ├── types.ts       # Types, constants, themes, achievements, state, replay, AI shots
+│   ├── types.ts       # Types, constants, themes, achievements, state, season, analysis
 │   └── audio.ts       # Procedural audio manager with 25+ sound types
-├── ui/                # 25 .uikitml spatial UI templates
+├── ui/                # 27 .uikitml spatial UI templates
 │   ├── title.uikitml
 │   ├── hud.uikitml
 │   ├── tournament.uikitml
+│   ├── season.uikitml
+│   ├── analysis.uikitml
 │   ├── replay.uikitml
 │   ├── camera.uikitml
 │   ├── commentary.uikitml
