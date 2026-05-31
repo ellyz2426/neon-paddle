@@ -95,5 +95,11 @@
     <span id="skin-name" class="setting-val">Neon Cyan</span>
     <div id="btn-skin-next" class="setting-btn"><span class="setting-btn-text">&gt;</span></div>
   </div>
+  <div class="setting-row">
+    <span class="setting-label">BALL</span>
+    <div id="btn-ballskin-prev" class="setting-btn"><span class="setting-btn-text">&lt;</span></div>
+    <span id="ballskin-name" class="setting-val">Classic White</span>
+    <div id="btn-ballskin-next" class="setting-btn"><span class="setting-btn-text">&gt;</span></div>
+  </div>
   <div id="btn-back-settings" class="back-btn"><span class="back-text">BACK</span></div>
 </div>

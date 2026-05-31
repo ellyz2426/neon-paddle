@@ -1,0 +1,64 @@
+<panel background-color="#0a1628cc" border-color="#00ffffaa" border-width="2" padding="20" flex-direction="column" align-items="center" gap="8">
+  <text id="season-title" font-size="28" color="#00ffff" font-weight="bold">SEASON MODE</text>
+  <text id="season-record" font-size="18" color="#ffffff">Record: 0W - 0L</text>
+  <panel flex-direction="column" gap="4" width="100%">
+    <panel flex-direction="row" justify-content="space-between" padding="4">
+      <text font-size="12" color="#00ffff88" width="20">#</text>
+      <text font-size="12" color="#00ffff88" width="60">NAME</text>
+      <text font-size="12" color="#00ffff88" width="80">TITLE</text>
+      <text font-size="12" color="#00ffff88" width="50">RESULT</text>
+    </panel>
+    <panel id="season-row-0" flex-direction="row" justify-content="space-between" padding="4" background-color="#ffffff08">
+      <text id="s-rank-0" font-size="14" color="#ffffff" width="20">1</text>
+      <text id="s-name-0" font-size="14" color="#00ffff" width="60">BYTE</text>
+      <text id="s-title-0" font-size="11" color="#ffffff88" width="80">The Rookie</text>
+      <text id="s-result-0" font-size="14" color="#ffffff" width="50">---</text>
+    </panel>
+    <panel id="season-row-1" flex-direction="row" justify-content="space-between" padding="4">
+      <text id="s-rank-1" font-size="14" color="#ffffff" width="20">2</text>
+      <text id="s-name-1" font-size="14" color="#00ffff" width="60">FLICKER</text>
+      <text id="s-title-1" font-size="11" color="#ffffff88" width="80">Speed Demon</text>
+      <text id="s-result-1" font-size="14" color="#ffffff" width="50">---</text>
+    </panel>
+    <panel id="season-row-2" flex-direction="row" justify-content="space-between" padding="4" background-color="#ffffff08">
+      <text id="s-rank-2" font-size="14" color="#ffffff" width="20">3</text>
+      <text id="s-name-2" font-size="14" color="#00ffff" width="60">ECHO</text>
+      <text id="s-title-2" font-size="11" color="#ffffff88" width="80">The Wall</text>
+      <text id="s-result-2" font-size="14" color="#ffffff" width="50">---</text>
+    </panel>
+    <panel id="season-row-3" flex-direction="row" justify-content="space-between" padding="4">
+      <text id="s-rank-3" font-size="14" color="#ffffff" width="20">4</text>
+      <text id="s-name-3" font-size="14" color="#00ffff" width="60">PRISM</text>
+      <text id="s-title-3" font-size="11" color="#ffffff88" width="80">Spin Artist</text>
+      <text id="s-result-3" font-size="14" color="#ffffff" width="50">---</text>
+    </panel>
+    <panel id="season-row-4" flex-direction="row" justify-content="space-between" padding="4" background-color="#ffffff08">
+      <text id="s-rank-4" font-size="14" color="#ffffff" width="20">5</text>
+      <text id="s-name-4" font-size="14" color="#00ffff" width="60">NEXUS</text>
+      <text id="s-title-4" font-size="11" color="#ffffff88" width="80">The Tactician</text>
+      <text id="s-result-4" font-size="14" color="#ffffff" width="50">---</text>
+    </panel>
+    <panel id="season-row-5" flex-direction="row" justify-content="space-between" padding="4">
+      <text id="s-rank-5" font-size="14" color="#ffffff" width="20">6</text>
+      <text id="s-name-5" font-size="14" color="#00ffff" width="60">BLITZ</text>
+      <text id="s-title-5" font-size="11" color="#ffffff88" width="80">Power Player</text>
+      <text id="s-result-5" font-size="14" color="#ffffff" width="50">---</text>
+    </panel>
+    <panel id="season-row-6" flex-direction="row" justify-content="space-between" padding="4" background-color="#ffffff08">
+      <text id="s-rank-6" font-size="14" color="#ffffff" width="20">7</text>
+      <text id="s-name-6" font-size="14" color="#00ffff" width="60">SURGE</text>
+      <text id="s-title-6" font-size="11" color="#ffffff88" width="80">The Aggressive</text>
+      <text id="s-result-6" font-size="14" color="#ffffff" width="50">---</text>
+    </panel>
+    <panel id="season-row-7" flex-direction="row" justify-content="space-between" padding="4">
+      <text id="s-rank-7" font-size="14" color="#ffffff" width="20">8</text>
+      <text id="s-name-7" font-size="14" color="#ffcc00" width="60">ZENITH</text>
+      <text id="s-title-7" font-size="11" color="#ffcc0088" width="80">Grand Champion</text>
+      <text id="s-result-7" font-size="14" color="#ffffff" width="50">---</text>
+    </panel>
+  </panel>
+  <panel flex-direction="row" gap="12" margin-top="8">
+    <text id="btn-season-play" font-size="16" color="#00ff88" padding="8">▶ PLAY NEXT</text>
+    <text id="btn-back-season" font-size="16" color="#ff6666" padding="8">✕ BACK</text>
+  </panel>
+</panel>

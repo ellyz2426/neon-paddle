@@ -330,19 +330,96 @@
             "sourceTag": "span",
             "type": "custom",
             "children": [
+              "BALL"
+            ],
+            "properties": {
+              "class": "setting-label"
+            },
+            "dataUid": "uid-32"
+          },
+          {
+            "type": "container",
+            "sourceTag": "div",
+            "children": [
+              {
+                "sourceTag": "span",
+                "type": "custom",
+                "children": [
+                  "<"
+                ],
+                "properties": {
+                  "class": "setting-btn-text"
+                },
+                "dataUid": "uid-34"
+              }
+            ],
+            "properties": {
+              "id": "btn-ballskin-prev",
+              "class": "setting-btn"
+            },
+            "dataUid": "uid-33"
+          },
+          {
+            "sourceTag": "span",
+            "type": "custom",
+            "children": [
+              "Classic White"
+            ],
+            "properties": {
+              "id": "ballskin-name",
+              "class": "setting-val"
+            },
+            "dataUid": "uid-35"
+          },
+          {
+            "type": "container",
+            "sourceTag": "div",
+            "children": [
+              {
+                "sourceTag": "span",
+                "type": "custom",
+                "children": [
+                  ">"
+                ],
+                "properties": {
+                  "class": "setting-btn-text"
+                },
+                "dataUid": "uid-37"
+              }
+            ],
+            "properties": {
+              "id": "btn-ballskin-next",
+              "class": "setting-btn"
+            },
+            "dataUid": "uid-36"
+          }
+        ],
+        "properties": {
+          "class": "setting-row"
+        },
+        "dataUid": "uid-31"
+      },
+      {
+        "type": "container",
+        "sourceTag": "div",
+        "children": [
+          {
+            "sourceTag": "span",
+            "type": "custom",
+            "children": [
               "BACK"
             ],
             "properties": {
               "class": "back-text"
             },
-            "dataUid": "uid-32"
+            "dataUid": "uid-39"
           }
         ],
         "properties": {
           "id": "btn-back-settings",
           "class": "back-btn"
         },
-        "dataUid": "uid-31"
+        "dataUid": "uid-38"
       }
     ],
     "properties": {
@@ -536,7 +613,7 @@
         "column": 0
       },
       "end": {
-        "line": 98,
+        "line": 104,
         "column": 6
       }
     },
@@ -836,17 +913,87 @@
         "column": 2
       },
       "end": {
-        "line": 97,
-        "column": 88
+        "line": 102,
+        "column": 8
       }
     },
     "uid-32": {
       "start": {
-        "line": 97,
+        "line": 98,
+        "column": 4
+      },
+      "end": {
+        "line": 98,
+        "column": 43
+      }
+    },
+    "uid-33": {
+      "start": {
+        "line": 99,
+        "column": 4
+      },
+      "end": {
+        "line": 99,
+        "column": 100
+      }
+    },
+    "uid-34": {
+      "start": {
+        "line": 99,
+        "column": 52
+      },
+      "end": {
+        "line": 99,
+        "column": 94
+      }
+    },
+    "uid-35": {
+      "start": {
+        "line": 100,
+        "column": 4
+      },
+      "end": {
+        "line": 100,
+        "column": 69
+      }
+    },
+    "uid-36": {
+      "start": {
+        "line": 101,
+        "column": 4
+      },
+      "end": {
+        "line": 101,
+        "column": 100
+      }
+    },
+    "uid-37": {
+      "start": {
+        "line": 101,
+        "column": 52
+      },
+      "end": {
+        "line": 101,
+        "column": 94
+      }
+    },
+    "uid-38": {
+      "start": {
+        "line": 103,
+        "column": 2
+      },
+      "end": {
+        "line": 103,
+        "column": 88
+      }
+    },
+    "uid-39": {
+      "start": {
+        "line": 103,
         "column": 47
       },
       "end": {
-        "line": 97,
+        "line": 103,
         "column": 82
       }
     }

@@ -12,9 +12,9 @@ import type { GameState, TournamentRound, CameraMode, AIShotConfig } from './typ
 import {
   GameStateManager, BallState, TABLE_LENGTH, TABLE_WIDTH, TABLE_HEIGHT,
   NET_HEIGHT, BALL_RADIUS, PADDLE_RADIUS, PADDLE_THICKNESS, TABLE_EDGE_WIDTH,
-  THEMES, DIFFICULTIES, GAME_MODES, PADDLE_SKINS, DRILLS,
+  THEMES, DIFFICULTIES, GAME_MODES, PADDLE_SKINS, DRILLS, BALL_SKINS,
   TOURNAMENT_BRACKET, getDailyModifiers, TUTORIAL_STEPS, DailyModifier,
-  CAMERA_MODES, AI_SHOTS, REPLAY_FPS,
+  CAMERA_MODES, AI_SHOTS, REPLAY_FPS, SEASON_OPPONENTS, SeasonOpponent,
 } from './types.js';
 import { AudioManager } from './audio.js';
 
@@ -138,6 +138,17 @@ let cameraSmoothPos = new Vector3(0, 1.6, 2.0);
 
 // Round 4: Consecutive aces for achievement
 let consecutiveAcesInRow = 0;
+
+// Round 5: Season mode AI override
+let seasonAI: { aiSpeed: number; aiReaction: number; aiAccuracy: number; aiAggression: number } | null = null;
+
+// Round 5: Flag to show analysis before game over
+let showAnalysisAfterGame = false;
+
+// Round 5: Track variety (ace, smash, rally wins in single match)
+let wonViaAce = false;
+let wonViaSmash = false;
+let wonViaRally = false;
 
 // === ENTRY ===
 async function main() {
@@ -431,13 +442,14 @@ function createPaddleMesh(rubberColor: number, handleColor: number, glowColor: n
 // === BALL ===
 function createBall() {
   const theme = gsm.getTheme();
+  const bs = gsm.getBallSkin();
   ballMesh = new Group();
 
   const ballGeo = new SphereGeometry(BALL_RADIUS, 12, 12);
   const ballMat = new MeshStandardMaterial({
-    color: theme.ball,
-    emissive: new Color(theme.accent),
-    emissiveIntensity: 0.5,
+    color: bs.color,
+    emissive: new Color(bs.glow),
+    emissiveIntensity: bs.emissiveIntensity,
     roughness: 0.3,
     metalness: 0.5,
   });
@@ -445,12 +457,12 @@ function createBall() {
   ballMesh.add(sphere);
 
   const edgesGeo = new EdgesGeometry(ballGeo);
-  const edgesMat = new LineBasicMaterial({ color: theme.accent, transparent: true, opacity: 0.3 });
+  const edgesMat = new LineBasicMaterial({ color: bs.glow, transparent: true, opacity: 0.3 });
   ballMesh.add(new LineSegments(edgesGeo, edgesMat));
 
   const glowGeo = new SphereGeometry(BALL_RADIUS * 1.8, 8, 8);
   const glowMat = new MeshBasicMaterial({
-    color: theme.accent,
+    color: bs.glow,
     transparent: true,
     opacity: 0.15,
     blending: AdditiveBlending,
@@ -662,6 +674,10 @@ function setupUI() {
     { name: 'camera', config: '/ui/camera.json', maxWidth: 0.15, maxHeight: 0.06, type: 'follower', offset: [-0.25, 0.18, -0.5] },
     // Round 4: Commentary
     { name: 'commentary', config: '/ui/commentary.json', maxWidth: 0.4, maxHeight: 0.06, type: 'follower', offset: [0, -0.18, -0.5] },
+    // Round 5: Season standings
+    { name: 'season', config: '/ui/season.json', maxWidth: 0.9, maxHeight: 1.0, pos: [0, TABLE_HEIGHT + 0.7, -0.5], type: 'world' },
+    // Round 5: Match analysis
+    { name: 'analysis', config: '/ui/analysis.json', maxWidth: 0.85, maxHeight: 0.8, pos: [0, TABLE_HEIGHT + 0.7, -0.4], type: 'world' },
   ];
 
   panels.forEach(p => {
@@ -705,6 +721,7 @@ function showUI(state: GameState) {
     'pause', 'gameover', 'leaderboard', 'achievements', 'settings', 'help', 'stats',
     'tournament_bracket', 'drills', 'drillhud', 'rallycounter', 'matchpoint',
     'daily', 'tutorial', 'windind', 'replay', 'camera', 'commentary',
+    'season', 'analysis',
   ];
 
   allPanels.forEach(name => {
@@ -731,6 +748,8 @@ function showUI(state: GameState) {
     case 'drill_active': showPanels.push('drillhud'); break;
     case 'daily_challenge': showPanels.push('daily'); break;
     case 'tutorial': showPanels.push('tutorial'); break;
+    case 'season': case 'season_standings': showPanels.push('season'); break;
+    case 'analysis': showPanels.push('analysis'); break;
   }
 
   showPanels.forEach(name => {
@@ -774,6 +793,7 @@ function updatePanelContent(state: GameState) {
         setText(doc, 'music-val', `${Math.round(gsm.musicVolume * 100)}%`);
         setText(doc, 'theme-name', gsm.getTheme().name);
         setText(doc, 'skin-name', gsm.getSkin().name);
+        setText(doc, 'ballskin-name', gsm.getBallSkin().name);
       }
       break;
     }
@@ -833,6 +853,15 @@ function updatePanelContent(state: GameState) {
       updateTutorialContent();
       break;
     }
+    case 'season':
+    case 'season_standings': {
+      updateSeasonContent();
+      break;
+    }
+    case 'analysis': {
+      updateAnalysisContent();
+      break;
+    }
   }
 }
 
@@ -865,6 +894,65 @@ function updateTutorialContent() {
   setText(doc, 'tut-line3', step.lines[2] || '');
 }
 
+// === ROUND 5: SEASON ===
+function updateSeasonContent() {
+  const doc = getDoc('season');
+  if (!doc) return;
+  setText(doc, 'season-record', `Record: ${gsm.getSeasonRecord()}`);
+  for (let i = 0; i < SEASON_OPPONENTS.length; i++) {
+    const s = gsm.seasonStandings[i];
+    if (!s) continue;
+    let resultText = '---';
+    if (s.played) {
+      resultText = s.won ? `W ${s.playerScore}-${s.aiScore}` : `L ${s.playerScore}-${s.aiScore}`;
+    } else if (i === gsm.seasonRound) {
+      resultText = '▶ NEXT';
+    }
+    setText(doc, `s-result-${i}`, resultText);
+  }
+}
+
+function updateAnalysisContent() {
+  const doc = getDoc('analysis');
+  if (!doc) return;
+  const a = gsm.buildMatchAnalysis();
+  setText(doc, 'an-serve-win', `Serve Win%: ${a.serveWinRate}%`);
+  setText(doc, 'an-return-win', `Return Win%: ${a.returnWinRate}%`);
+  setText(doc, 'an-aces', `Aces: ${a.aces}`);
+  setText(doc, 'an-smashes', `Smashes: ${a.smashes}`);
+  setText(doc, 'an-longest', `Longest: ${a.longestRally}`);
+  setText(doc, 'an-avg-rally', `Average: ${a.avgRallyLength}`);
+  setText(doc, 'an-total-rallies', `Rallies: ${a.totalRallies}`);
+  setText(doc, 'an-total-hits', `Total Hits: ${a.totalHits}`);
+  setText(doc, 'an-streak', `Best Streak: ${a.pointsOnStreak}`);
+  setText(doc, 'an-edges', `Edge Hits: ${a.edgeHits}`);
+  setText(doc, 'an-netrollers', `Net Rollers: ${a.netRollers}`);
+  setText(doc, 'an-comeback', `Comebacks: ${a.comebacks}`);
+
+  // Performance rating (composite)
+  const rating = Math.round(
+    a.aces * 15 + a.smashes * 10 + a.longestRally * 3 + a.pointsOnStreak * 8
+    + (a.serveWinRate > 70 ? 20 : 0) + (a.comebacks > 0 ? 25 : 0)
+  );
+  setText(doc, 'an-rating', `Rating: ${rating}`);
+
+  let grade = 'D';
+  if (rating >= 200) grade = 'S';
+  else if (rating >= 150) grade = 'A';
+  else if (rating >= 100) grade = 'B';
+  else if (rating >= 50) grade = 'C';
+  setText(doc, 'an-grade', `Grade: ${grade}`);
+
+  // MVP moment
+  let mvp = 'Steady rally play';
+  if (a.aces >= 5) mvp = `${a.aces} aces served!`;
+  else if (a.longestRally >= 25) mvp = `Epic ${a.longestRally}-hit rally!`;
+  else if (a.comebacks > 0) mvp = 'Incredible comeback victory!';
+  else if (a.pointsOnStreak >= 5) mvp = `Dominant ${a.pointsOnStreak}-point streak!`;
+  else if (a.smashes >= 5) mvp = `${a.smashes} powerful smashes!`;
+  setText(doc, 'an-mvp-moment', `MVP: ${mvp}`);
+}
+
 // === UI EVENT BINDING ===
 function bindUIEvents() {
   // Title
@@ -888,6 +976,9 @@ function bindUIEvents() {
       if (mode.id === 'tournament') {
         gsm.initTournament();
         showUI('tournament_bracket');
+      } else if (mode.id === 'season') {
+        gsm.initSeason();
+        showUI('season');
       } else if (mode.id === 'daily') {
         showUI('daily_challenge');
       } else if (mode.id === 'training' || mode.id === 'rally' || mode.id === 'speed') {
@@ -915,6 +1006,8 @@ function bindUIEvents() {
     if (gsm.mode === 'tournament') {
       // If lost tournament, go to bracket
       showUI('tournament_bracket');
+    } else if (gsm.mode === 'season') {
+      showUI('season');
     } else {
       startGame(gsm.difficulty);
     }
@@ -922,7 +1015,7 @@ function bindUIEvents() {
   bindButton('gameover', 'btn-title', () => { audio.playClick(); showUI('title'); });
 
   // Back buttons
-  ['leaderboard', 'achievements', 'settings', 'help', 'stats', 'tournament_bracket', 'drills', 'daily'].forEach(panel => {
+  ['leaderboard', 'achievements', 'settings', 'help', 'stats', 'tournament_bracket', 'drills', 'daily', 'season'].forEach(panel => {
     bindButton(panel, `btn-back-${panel}`, () => { audio.playClick(); showUI('title'); });
   });
 
@@ -994,6 +1087,29 @@ function bindUIEvents() {
     if (gsm.skinsUsed.size >= PADDLE_SKINS.length) gsm.unlockAchievement('all_skins');
     gsm.savePersistence(); updatePanelContent('settings'); applySkin();
   });
+  // Round 5: Ball skin controls
+  bindButton('settings', 'btn-ballskin-prev', () => {
+    gsm.ballSkinIndex = (gsm.ballSkinIndex - 1 + BALL_SKINS.length) % BALL_SKINS.length;
+    gsm.ballSkinsUsed.add(gsm.ballSkinIndex);
+    if (gsm.ballSkinsUsed.size >= BALL_SKINS.length) gsm.unlockAchievement('all_ball_skins');
+    gsm.savePersistence(); updatePanelContent('settings'); applyBallSkin();
+  });
+  bindButton('settings', 'btn-ballskin-next', () => {
+    gsm.ballSkinIndex = (gsm.ballSkinIndex + 1) % BALL_SKINS.length;
+    gsm.ballSkinsUsed.add(gsm.ballSkinIndex);
+    if (gsm.ballSkinsUsed.size >= BALL_SKINS.length) gsm.unlockAchievement('all_ball_skins');
+    gsm.savePersistence(); updatePanelContent('settings'); applyBallSkin();
+  });
+  // Round 5: Season play
+  bindButton('season', 'btn-season-play', () => {
+    audio.playClick();
+    startSeasonRound();
+  });
+  // Round 5: Analysis continue
+  bindButton('analysis', 'btn-analysis-continue', () => {
+    audio.playClick();
+    showUI('gameover');
+  });
 }
 
 function bindButton(panel: string, id: string, cb: () => void) {
@@ -1064,7 +1180,7 @@ function serveBall() {
   if (!isPlayerServe) {
     setTimeout(() => {
       if (gsm.state !== 'playing' && gsm.state !== 'drill_active') return;
-      const diff = tournamentAI || DIFFICULTIES[gsm.difficulty];
+      const diff = tournamentAI || seasonAI || DIFFICULTIES[gsm.difficulty];
       const speed = 3 + (diff.aiAggression ?? gsm.difficulty) * 1.5;
       const sideAim = (Math.random() - 0.5) * 1.5;
       ball.velocity.set(sideAim, 2.0, speed);
@@ -1248,6 +1364,63 @@ function getDailySpinScale(): number {
   return 1.0;
 }
 
+// === ROUND 5: SEASON MODE ===
+function startSeasonRound() {
+  const opp = gsm.getCurrentSeasonOpponent();
+  if (!opp || gsm.isSeasonComplete()) {
+    showUI('title');
+    return;
+  }
+  seasonAI = {
+    aiSpeed: opp.aiSpeed,
+    aiReaction: opp.aiReaction,
+    aiAccuracy: opp.aiAccuracy,
+    aiAggression: opp.aiAggression,
+  };
+  gsm.mode = 'season';
+  gsm.setsToWin = 1;
+  showToast(`VS ${opp.name} — ${opp.title}`);
+  audio.playTournamentFanfare();
+  startGame(0); // Difficulty managed by season AI
+}
+
+function endSeasonRound(playerWon: boolean) {
+  gsm.advanceSeason(playerWon, gsm.playerScore, gsm.aiScore);
+  seasonAI = null;
+
+  if (!playerWon) {
+    audio.playTournamentElimination();
+    showToast(`${SEASON_OPPONENTS[gsm.seasonRound - 1]?.name ?? 'Opponent'} wins`);
+  } else {
+    showToast('MATCH WON!');
+    audio.playCrowdCheer();
+    // Check achievements
+    if (gsm.seasonRound === SEASON_OPPONENTS.length && gsm.seasonStandings[7]?.won) {
+      gsm.unlockAchievement('beat_zenith');
+    }
+    // Check season consecutive wins
+    let consecutiveWins = 0;
+    for (let i = gsm.seasonRound - 1; i >= 0; i--) {
+      if (gsm.seasonStandings[i]?.won) consecutiveWins++;
+      else break;
+    }
+    if (consecutiveWins >= 5) gsm.unlockAchievement('season_sweep');
+    if (consecutiveWins > gsm.seasonBestRun) gsm.seasonBestRun = consecutiveWins;
+  }
+
+  if (gsm.isSeasonComplete()) {
+    gsm.unlockAchievement('season_complete');
+    if (gsm.seasonWins === SEASON_OPPONENTS.length) {
+      gsm.unlockAchievement('season_perfect');
+    }
+    gsm.savePersistence();
+    setTimeout(() => showUI('season'), 2000);
+  } else {
+    gsm.savePersistence();
+    setTimeout(() => showUI('season'), 2000);
+  }
+}
+
 function endGame() {
   const playerWon = gsm.mode === 'match'
     ? gsm.playerSets > gsm.aiSets
@@ -1256,6 +1429,14 @@ function endGame() {
   // Handle tournament mode
   if (gsm.mode === 'tournament') {
     endTournamentRound(playerWon);
+    return;
+  }
+
+  // Handle season mode
+  if (gsm.mode === 'season') {
+    // Record rally for analysis
+    if (gsm.rallyCount > 0) gsm.rallyLengths.push(gsm.rallyCount);
+    endSeasonRound(playerWon);
     return;
   }
 
@@ -1307,6 +1488,16 @@ function endGame() {
   if (gsm.gamesPlayed >= 50) gsm.unlockAchievement('games50');
   if (gsm.totalAces >= 10) gsm.unlockAchievement('ace10');
   if (gsm.smashes >= 10) gsm.unlockAchievement('smash10');
+  // Round 5: New achievements
+  if (gsm.aces >= 5) gsm.unlockAchievement('serve_ace_5_match');
+  if (wonViaAce && wonViaSmash && wonViaRally) gsm.unlockAchievement('rally_variety');
+  // Close match: won a set with 13-11 or closer margin in deuce
+  if (playerWon && gsm.playerScore >= 13 && gsm.aiScore >= 11) gsm.unlockAchievement('close_match');
+
+  // Reset Round 5 variety trackers
+  wonViaAce = false;
+  wonViaSmash = false;
+  wonViaRally = false;
 
   const scoreStr = gsm.mode === 'match'
     ? `${gsm.playerSets}-${gsm.aiSets} (${gsm.playerScore}-${gsm.aiScore})`
@@ -1328,7 +1519,10 @@ function endGame() {
   ballMesh.visible = false;
   ballShadow.visible = false;
   spinLines.visible = false;
-  showUI('gameover');
+
+  // Round 5: Show analysis first, then game over
+  showAnalysisAfterGame = true;
+  showUI('analysis');
 }
 
 // === THEME / SKIN APPLICATION ===
@@ -1347,6 +1541,22 @@ function applySkin() {
     (playerPaddle.children[0] as Mesh).material = new MeshStandardMaterial({
       color: skin.rubber, emissive: new Color(skin.rubber), emissiveIntensity: 0.5, roughness: 0.6, metalness: 0.3,
     });
+  }
+}
+
+function applyBallSkin() {
+  const bs = gsm.getBallSkin();
+  if (ballMesh && ballMesh.children[0]) {
+    (ballMesh.children[0] as Mesh).material = new MeshStandardMaterial({
+      color: bs.color,
+      emissive: new Color(bs.glow),
+      emissiveIntensity: bs.emissiveIntensity,
+      roughness: 0.3,
+      metalness: 0.5,
+    });
+  }
+  if (ballGlow) {
+    (ballGlow.material as MeshBasicMaterial).color.set(bs.glow);
   }
 }
 
@@ -2078,6 +2288,7 @@ function updateBallPhysics(dt: number) {
           showToast('NET ROLLER!');
           showCommentary('net_roller');
           spawnParticles(ball.position.clone(), gsm.getTheme().net, 8);
+          gsm.netRollersThisMatch++;
           // Will check for net_roller achievement when point scores
         } else {
           ball.velocity.z *= -0.3;
@@ -2241,12 +2452,13 @@ function updateTrail() {
   }
   trailLine.geometry.attributes.position.needsUpdate = true;
 
-  // Speed-based trail color: blue (slow) → cyan → yellow → red (fast)
+  // Speed-based trail color using ball skin base trail color
   if (ball.active) {
     const speed = ball.velocity.length();
+    const bs = gsm.getBallSkin();
     let trailColor: number;
-    if (speed < 3) trailColor = 0x4488ff; // blue
-    else if (speed < 5) trailColor = gsm.getTheme().accent; // theme accent
+    if (speed < 3) trailColor = bs.trailColor;
+    else if (speed < 5) trailColor = bs.trailColor;
     else if (speed < 8) trailColor = 0xffaa00; // orange/yellow
     else trailColor = 0xff3300; // red
     (trailLine.material as LineBasicMaterial).color.set(trailColor);
@@ -2296,6 +2508,25 @@ function scorePoint(winner: 'player' | 'ai', reason: string) {
   }
 
   gsm.pointScored(winner);
+
+  // Round 5: Track serve/return stats for analysis
+  if (gsm.serving === 'player' || (gsm.serving === 'ai' && ball.lastHitBy === 'player')) {
+    // Point played on player's serve
+    gsm.servePointsPlayed++;
+    if (winner === 'player') gsm.servePointsWon++;
+  } else {
+    gsm.returnPointsPlayed++;
+    if (winner === 'player') gsm.returnPointsWon++;
+  }
+  // Track rally length for analysis
+  if (gsm.rallyCount > 0) gsm.rallyLengths.push(gsm.rallyCount);
+
+  // Round 5: Track victory variety
+  if (winner === 'player') {
+    if (reason === 'winner' && ball.bounceCount <= 1) wonViaAce = true;
+    if (reason === 'winner' && gsm.smashes > 0) wonViaSmash = true;
+    if (gsm.rallyCount >= 5) wonViaRally = true;
+  }
 
   // Round 4: Dramatic screen flash on important points
   const isImportantPoint = gsm.isMatchPoint || gsm.isDeuce || gsm.currentStreak >= 3;

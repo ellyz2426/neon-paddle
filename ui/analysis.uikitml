@@ -1,0 +1,37 @@
+<panel background-color="#0a1628cc" border-color="#00ffffaa" border-width="2" padding="16" flex-direction="column" align-items="center" gap="6">
+  <text id="analysis-title" font-size="24" color="#00ffff" font-weight="bold">MATCH ANALYSIS</text>
+  <panel flex-direction="row" gap="20" width="100%">
+    <panel flex-direction="column" gap="4" flex="1">
+      <text font-size="14" color="#00ffff88">SERVE STATS</text>
+      <text id="an-serve-win" font-size="13" color="#ffffff">Serve Win%: --</text>
+      <text id="an-return-win" font-size="13" color="#ffffff">Return Win%: --</text>
+      <text id="an-aces" font-size="13" color="#ffffff">Aces: 0</text>
+      <text id="an-smashes" font-size="13" color="#ffffff">Smashes: 0</text>
+    </panel>
+    <panel flex-direction="column" gap="4" flex="1">
+      <text font-size="14" color="#00ffff88">RALLY STATS</text>
+      <text id="an-longest" font-size="13" color="#ffffff">Longest: 0</text>
+      <text id="an-avg-rally" font-size="13" color="#ffffff">Average: 0</text>
+      <text id="an-total-rallies" font-size="13" color="#ffffff">Rallies: 0</text>
+      <text id="an-total-hits" font-size="13" color="#ffffff">Total Hits: 0</text>
+    </panel>
+  </panel>
+  <panel flex-direction="row" gap="20" width="100%">
+    <panel flex-direction="column" gap="4" flex="1">
+      <text font-size="14" color="#00ffff88">HIGHLIGHTS</text>
+      <text id="an-streak" font-size="13" color="#ffffff">Best Streak: 0</text>
+      <text id="an-edges" font-size="13" color="#ffffff">Edge Hits: 0</text>
+      <text id="an-netrollers" font-size="13" color="#ffffff">Net Rollers: 0</text>
+      <text id="an-comeback" font-size="13" color="#ffffff">Comebacks: 0</text>
+    </panel>
+    <panel flex-direction="column" gap="4" flex="1">
+      <text font-size="14" color="#00ffff88">PERFORMANCE</text>
+      <text id="an-rating" font-size="18" color="#00ff88">Rating: --</text>
+      <text id="an-grade" font-size="14" color="#ffcc00">Grade: --</text>
+      <text id="an-mvp-moment" font-size="12" color="#ffffff88">MVP Moment: --</text>
+    </panel>
+  </panel>
+  <panel flex-direction="row" gap="12" margin-top="6">
+    <text id="btn-analysis-continue" font-size="16" color="#00ff88" padding="8">CONTINUE ▶</text>
+  </panel>
+</panel>

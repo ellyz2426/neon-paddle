@@ -72,7 +72,8 @@ export const COMMENTARY: CommentaryLine[] = [
 export type GameState = 'title' | 'modeselect' | 'difficulty' | 'playing' | 'paused' | 'gameover'
   | 'leaderboard' | 'achievements' | 'settings' | 'help' | 'stats' | 'countdown'
   | 'serve_practice' | 'rally_practice' | 'tournament' | 'tournament_bracket'
-  | 'drills' | 'drill_active' | 'daily_challenge' | 'tutorial' | 'replay';
+  | 'drills' | 'drill_active' | 'daily_challenge' | 'tutorial' | 'replay'
+  | 'season' | 'season_standings' | 'analysis';
 
 // === DAILY CHALLENGE MODIFIERS ===
 export interface DailyModifier {
@@ -167,6 +168,7 @@ export const GAME_MODES: GameMode[] = [
   { id: 'training', name: 'TRAINING', description: 'AI returns everything', rounds: 0 },
   { id: 'tournament', name: 'TOURNAMENT', description: '4-round bracket challenge', rounds: 0 },
   { id: 'daily', name: 'DAILY CHALLENGE', description: 'Random daily modifiers', rounds: 0 },
+  { id: 'season', name: 'SEASON', description: '8-opponent ranked season', rounds: 0 },
 ];
 
 // === DIFFICULTY ===
@@ -309,7 +311,86 @@ export function getDefaultAchievements(): Achievement[] {
     { id: 'speed_100', name: 'Sonic', description: '100+ hits in Speed Rally', unlocked: false },
     { id: 'all_drills', name: 'Scholar', description: 'Complete all 4 drills', unlocked: false },
     { id: 'win_streak_5', name: 'Winning Streak', description: 'Win 5 consecutive matches', unlocked: false },
+    // Round 5: Ball skins, season, analysis (8)
+    { id: 'all_ball_skins', name: 'Ball Collector', description: 'Try all 8 ball skins', unlocked: false },
+    { id: 'season_complete', name: 'Season Champion', description: 'Complete a full season', unlocked: false },
+    { id: 'season_perfect', name: 'Undefeated', description: 'Win all 8 season matches', unlocked: false },
+    { id: 'season_sweep', name: 'Clean Sweep', description: 'Win 5+ season matches in a row', unlocked: false },
+    { id: 'beat_zenith', name: 'Apex Predator', description: 'Defeat ZENITH in season', unlocked: false },
+    { id: 'serve_ace_5_match', name: 'Ace Barrage', description: '5 aces in a single match', unlocked: false },
+    { id: 'rally_variety', name: 'Versatile', description: 'Win via ace, smash, and rally in one match', unlocked: false },
+    { id: 'close_match', name: 'Nail Biter', description: 'Win a set 13-11 or closer', unlocked: false },
   ];
+}
+
+// === BALL SKINS ===
+export interface BallSkin {
+  id: string;
+  name: string;
+  color: number;
+  glow: number;
+  trailColor: number;
+  emissiveIntensity: number;
+}
+
+export const BALL_SKINS: BallSkin[] = [
+  { id: 'classic', name: 'Classic White', color: 0xffffff, glow: 0x00ffff, trailColor: 0x00ffff, emissiveIntensity: 0.5 },
+  { id: 'plasma', name: 'Plasma Pink', color: 0xff66cc, glow: 0xff33aa, trailColor: 0xff33aa, emissiveIntensity: 0.7 },
+  { id: 'solar', name: 'Solar Flare', color: 0xffaa00, glow: 0xff6600, trailColor: 0xff8800, emissiveIntensity: 0.8 },
+  { id: 'ice', name: 'Ice Crystal', color: 0xaaeeff, glow: 0x66ccff, trailColor: 0x44aaff, emissiveIntensity: 0.6 },
+  { id: 'toxic', name: 'Toxic Green', color: 0x44ff44, glow: 0x22ff00, trailColor: 0x33ff33, emissiveIntensity: 0.7 },
+  { id: 'void', name: 'Void Purple', color: 0xaa44ff, glow: 0x8833ff, trailColor: 0x9933ff, emissiveIntensity: 0.8 },
+  { id: 'chrome', name: 'Chrome Silver', color: 0xcccccc, glow: 0x888888, trailColor: 0xaaaaaa, emissiveIntensity: 0.3 },
+  { id: 'inferno', name: 'Inferno Red', color: 0xff3300, glow: 0xff0000, trailColor: 0xff2200, emissiveIntensity: 0.9 },
+];
+
+// === SEASON MODE ===
+export interface SeasonOpponent {
+  name: string;
+  title: string;
+  aiSpeed: number;
+  aiReaction: number;
+  aiAccuracy: number;
+  aiAggression: number;
+  preferredShots: string[]; // weighted shot tendencies
+}
+
+export const SEASON_OPPONENTS: SeasonOpponent[] = [
+  { name: 'BYTE', title: 'The Rookie', aiSpeed: 1.5, aiReaction: 0.5, aiAccuracy: 0.4, aiAggression: 0.15, preferredShots: ['drive'] },
+  { name: 'FLICKER', title: 'Speed Demon', aiSpeed: 3.2, aiReaction: 0.22, aiAccuracy: 0.55, aiAggression: 0.3, preferredShots: ['drive', 'cross_court'] },
+  { name: 'ECHO', title: 'The Wall', aiSpeed: 2.8, aiReaction: 0.18, aiAccuracy: 0.7, aiAggression: 0.2, preferredShots: ['drive', 'lob'] },
+  { name: 'PRISM', title: 'Spin Artist', aiSpeed: 3.0, aiReaction: 0.25, aiAccuracy: 0.65, aiAggression: 0.45, preferredShots: ['topspin', 'cross_court'] },
+  { name: 'NEXUS', title: 'The Tactician', aiSpeed: 3.8, aiReaction: 0.2, aiAccuracy: 0.75, aiAggression: 0.5, preferredShots: ['drop', 'cross_court', 'lob'] },
+  { name: 'BLITZ', title: 'Power Player', aiSpeed: 4.5, aiReaction: 0.18, aiAccuracy: 0.72, aiAggression: 0.75, preferredShots: ['smash', 'drive'] },
+  { name: 'SURGE', title: 'The Aggressive', aiSpeed: 5.0, aiReaction: 0.14, aiAccuracy: 0.82, aiAggression: 0.85, preferredShots: ['smash', 'topspin', 'cross_court'] },
+  { name: 'ZENITH', title: 'Grand Champion', aiSpeed: 6.0, aiReaction: 0.08, aiAccuracy: 0.95, aiAggression: 0.9, preferredShots: ['smash', 'drop', 'cross_court', 'topspin'] },
+];
+
+export interface SeasonStanding {
+  opponentName: string;
+  played: boolean;
+  won: boolean | null;
+  playerScore: number;
+  aiScore: number;
+}
+
+// === MATCH ANALYSIS ===
+export interface MatchAnalysis {
+  totalHits: number;
+  playerHits: number;
+  aiHits: number;
+  aces: number;
+  smashes: number;
+  edgeHits: number;
+  netRollers: number;
+  longestRally: number;
+  avgRallyLength: number;
+  totalRallies: number;
+  comebacks: number;
+  pointsOnStreak: number;
+  serveWinRate: number;
+  returnWinRate: number;
+  shotDistribution: { type: string; count: number }[];
 }
 
 // === PADDLE SKINS ===
@@ -356,6 +437,7 @@ export class GameStateManager {
   masterVolume: number = 0.7;
   sfxVolume: number = 0.8;
   musicVolume: number = 0.5;
+  ballSkinIndex: number = 0;
 
   // Career stats
   gamesPlayed: number = 0;
@@ -432,6 +514,28 @@ export class GameStateManager {
   drillsCompleted: Set<string> = new Set();
   winStreak: number = 0;
 
+  // Round 5: Season mode
+  seasonRound: number = 0;
+  seasonStandings: SeasonStanding[] = [];
+  seasonWins: number = 0;
+  seasonLosses: number = 0;
+  seasonBestRun: number = 0; // most consecutive season wins
+
+  // Round 5: Match analysis tracking
+  matchAnalysis: MatchAnalysis = {
+    totalHits: 0, playerHits: 0, aiHits: 0, aces: 0, smashes: 0,
+    edgeHits: 0, netRollers: 0, longestRally: 0, avgRallyLength: 0,
+    totalRallies: 0, comebacks: 0, pointsOnStreak: 0,
+    serveWinRate: 0, returnWinRate: 0, shotDistribution: [],
+  };
+  rallyLengths: number[] = [];
+  servePointsWon: number = 0;
+  servePointsPlayed: number = 0;
+  returnPointsWon: number = 0;
+  returnPointsPlayed: number = 0;
+  netRollersThisMatch: number = 0;
+  ballSkinsUsed: Set<number> = new Set();
+
   achievements: Achievement[] = getDefaultAchievements();
   leaderboard: { score: string; mode: string; difficulty: string; date: string }[] = [];
 
@@ -449,6 +553,7 @@ export class GameStateManager {
         this.masterVolume = data.masterVolume ?? 0.7;
         this.sfxVolume = data.sfxVolume ?? 0.8;
         this.musicVolume = data.musicVolume ?? 0.5;
+        this.ballSkinIndex = data.ballSkinIndex ?? 0;
         this.gamesPlayed = data.gamesPlayed ?? 0;
         this.gamesWon = data.gamesWon ?? 0;
         this.totalAces = data.totalAces ?? 0;
@@ -468,6 +573,8 @@ export class GameStateManager {
         if (data.leaderboard) this.leaderboard = data.leaderboard;
         if (data.drillsCompleted) this.drillsCompleted = new Set(data.drillsCompleted);
         this.winStreak = data.winStreak ?? 0;
+        this.seasonBestRun = data.seasonBestRun ?? 0;
+        if (data.ballSkinsUsed) this.ballSkinsUsed = new Set(data.ballSkinsUsed);
       }
     } catch { /* ignore */ }
   }
@@ -494,6 +601,9 @@ export class GameStateManager {
         leaderboard: this.leaderboard.slice(0, 20),
         drillsCompleted: [...this.drillsCompleted],
         winStreak: this.winStreak,
+        ballSkinIndex: this.ballSkinIndex,
+        seasonBestRun: this.seasonBestRun,
+        ballSkinsUsed: [...this.ballSkinsUsed],
       }));
     } catch { /* ignore */ }
   }
@@ -529,6 +639,13 @@ export class GameStateManager {
     this.consecutiveAces = 0;
     this.aiLastShot = 'drive';
     this.screenFlashIntensity = 0;
+    // Round 5: Match analysis reset
+    this.rallyLengths = [];
+    this.servePointsWon = 0;
+    this.servePointsPlayed = 0;
+    this.returnPointsWon = 0;
+    this.returnPointsPlayed = 0;
+    this.netRollersThisMatch = 0;
   }
 
   getTheme(): Theme {
@@ -537,6 +654,73 @@ export class GameStateManager {
 
   getSkin(): PaddleSkin {
     return PADDLE_SKINS[this.skinIndex % PADDLE_SKINS.length];
+  }
+
+  getBallSkin(): BallSkin {
+    return BALL_SKINS[this.ballSkinIndex % BALL_SKINS.length];
+  }
+
+  // === SEASON MODE ===
+  initSeason() {
+    this.seasonRound = 0;
+    this.seasonWins = 0;
+    this.seasonLosses = 0;
+    this.seasonStandings = SEASON_OPPONENTS.map(opp => ({
+      opponentName: opp.name,
+      played: false,
+      won: null,
+      playerScore: 0,
+      aiScore: 0,
+    }));
+  }
+
+  getCurrentSeasonOpponent(): SeasonOpponent | null {
+    if (this.seasonRound >= SEASON_OPPONENTS.length) return null;
+    return SEASON_OPPONENTS[this.seasonRound];
+  }
+
+  advanceSeason(won: boolean, playerScore: number, aiScore: number) {
+    if (this.seasonRound < this.seasonStandings.length) {
+      this.seasonStandings[this.seasonRound].played = true;
+      this.seasonStandings[this.seasonRound].won = won;
+      this.seasonStandings[this.seasonRound].playerScore = playerScore;
+      this.seasonStandings[this.seasonRound].aiScore = aiScore;
+      if (won) this.seasonWins++;
+      else this.seasonLosses++;
+      this.seasonRound++;
+    }
+  }
+
+  isSeasonComplete(): boolean {
+    return this.seasonRound >= SEASON_OPPONENTS.length;
+  }
+
+  getSeasonRecord(): string {
+    return `${this.seasonWins}W - ${this.seasonLosses}L`;
+  }
+
+  // === MATCH ANALYSIS ===
+  buildMatchAnalysis(): MatchAnalysis {
+    const avgRally = this.rallyLengths.length > 0
+      ? this.rallyLengths.reduce((s, v) => s + v, 0) / this.rallyLengths.length
+      : 0;
+    return {
+      totalHits: this.totalHits,
+      playerHits: this.totalHits, // approximation
+      aiHits: 0,
+      aces: this.aces,
+      smashes: this.smashes,
+      edgeHits: this.edgeHitsThisMatch,
+      netRollers: this.netRollersThisMatch,
+      longestRally: this.bestRally,
+      avgRallyLength: Math.round(avgRally * 10) / 10,
+      totalRallies: this.rallyLengths.length,
+      comebacks: this.maxTrailingDeficit >= 5 ? 1 : 0,
+      pointsOnStreak: this.bestStreak,
+      serveWinRate: this.servePointsPlayed > 0 ? Math.round(this.servePointsWon / this.servePointsPlayed * 100) : 0,
+      returnWinRate: this.returnPointsPlayed > 0 ? Math.round(this.returnPointsWon / this.returnPointsPlayed * 100) : 0,
+      shotDistribution: [],
+    };
   }
 
   unlockAchievement(id: string): boolean {
