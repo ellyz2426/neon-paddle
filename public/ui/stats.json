@@ -286,19 +286,91 @@
             "sourceTag": "span",
             "type": "custom",
             "children": [
+              "Level"
+            ],
+            "properties": {
+              "class": "stat-label"
+            },
+            "dataUid": "uid-28"
+          },
+          {
+            "sourceTag": "span",
+            "type": "custom",
+            "children": [
+              "1"
+            ],
+            "properties": {
+              "id": "stat-level",
+              "class": "stat-val",
+              "style": {
+                "color": "#ffcc00"
+              }
+            },
+            "dataUid": "uid-29"
+          }
+        ],
+        "properties": {
+          "class": "stat-row"
+        },
+        "dataUid": "uid-27"
+      },
+      {
+        "type": "container",
+        "sourceTag": "div",
+        "children": [
+          {
+            "sourceTag": "span",
+            "type": "custom",
+            "children": [
+              "Total XP"
+            ],
+            "properties": {
+              "class": "stat-label"
+            },
+            "dataUid": "uid-31"
+          },
+          {
+            "sourceTag": "span",
+            "type": "custom",
+            "children": [
+              "0"
+            ],
+            "properties": {
+              "id": "stat-xp",
+              "class": "stat-val",
+              "style": {
+                "color": "#ffcc00"
+              }
+            },
+            "dataUid": "uid-32"
+          }
+        ],
+        "properties": {
+          "class": "stat-row"
+        },
+        "dataUid": "uid-30"
+      },
+      {
+        "type": "container",
+        "sourceTag": "div",
+        "children": [
+          {
+            "sourceTag": "span",
+            "type": "custom",
+            "children": [
               "BACK"
             ],
             "properties": {
               "class": "back-text"
             },
-            "dataUid": "uid-28"
+            "dataUid": "uid-34"
           }
         ],
         "properties": {
           "id": "btn-back-stats",
           "class": "back-btn"
         },
-        "dataUid": "uid-27"
+        "dataUid": "uid-33"
       }
     ],
     "properties": {
@@ -454,7 +526,7 @@
         "column": 0
       },
       "end": {
-        "line": 68,
+        "line": 70,
         "column": 6
       }
     },
@@ -715,16 +787,76 @@
       },
       "end": {
         "line": 67,
-        "column": 85
+        "column": 138
       }
     },
     "uid-28": {
       "start": {
         "line": 67,
-        "column": 44
+        "column": 24
       },
       "end": {
         "line": 67,
+        "column": 61
+      }
+    },
+    "uid-29": {
+      "start": {
+        "line": 67,
+        "column": 61
+      },
+      "end": {
+        "line": 67,
+        "column": 132
+      }
+    },
+    "uid-30": {
+      "start": {
+        "line": 68,
+        "column": 2
+      },
+      "end": {
+        "line": 68,
+        "column": 138
+      }
+    },
+    "uid-31": {
+      "start": {
+        "line": 68,
+        "column": 24
+      },
+      "end": {
+        "line": 68,
+        "column": 64
+      }
+    },
+    "uid-32": {
+      "start": {
+        "line": 68,
+        "column": 64
+      },
+      "end": {
+        "line": 68,
+        "column": 132
+      }
+    },
+    "uid-33": {
+      "start": {
+        "line": 69,
+        "column": 2
+      },
+      "end": {
+        "line": 69,
+        "column": 85
+      }
+    },
+    "uid-34": {
+      "start": {
+        "line": 69,
+        "column": 44
+      },
+      "end": {
+        "line": 69,
         "column": 79
       }
     }

@@ -65,5 +65,7 @@
   <div class="stat-row"><span class="stat-label">Longest Rally</span><span id="stat-longrally" class="stat-val">0</span></div>
   <div class="stat-row"><span class="stat-label">Points Won</span><span id="stat-points" class="stat-val">0</span></div>
   <div class="stat-row"><span class="stat-label">Achievements</span><span id="stat-achievements" class="stat-val">0/20</span></div>
+  <div class="stat-row"><span class="stat-label">Level</span><span id="stat-level" class="stat-val" style="color: #ffcc00;">1</span></div>
+  <div class="stat-row"><span class="stat-label">Total XP</span><span id="stat-xp" class="stat-val" style="color: #ffcc00;">0</span></div>
   <div id="btn-back-stats" class="back-btn"><span class="back-text">BACK</span></div>
 </div>

@@ -15,6 +15,8 @@ import {
   THEMES, DIFFICULTIES, GAME_MODES, PADDLE_SKINS, DRILLS, BALL_SKINS,
   TOURNAMENT_BRACKET, getDailyModifiers, TUTORIAL_STEPS, DailyModifier,
   CAMERA_MODES, AI_SHOTS, REPLAY_FPS, SEASON_OPPONENTS, SeasonOpponent,
+  getLevelFromXP, LEVEL_UNLOCKS, AI_TAUNTS,
+  XP_PER_WIN, XP_PER_LOSS, XP_PER_ACE, XP_PER_SMASH, XP_PER_RALLY_10,
 } from './types.js';
 import { AudioManager } from './audio.js';
 
@@ -150,6 +152,20 @@ let wonViaAce = false;
 let wonViaSmash = false;
 let wonViaRally = false;
 
+// Round 6: Ball impact ripple effect
+let impactRippleMesh: Mesh | null = null;
+let impactRippleScale = 0;
+let impactRippleOpacity = 0;
+let impactRippleActive = false;
+
+// Round 6: AI taunt panel
+let tauntTimer = 0;
+let tauntVisible = false;
+
+// Round 6: Level-up notification state
+let levelUpTimer = 0;
+let levelUpLevel = 0;
+
 // === ENTRY ===
 async function main() {
   const container = document.getElementById('app') as HTMLDivElement;
@@ -182,6 +198,7 @@ async function main() {
   createTrail();
   createPowerGlow();
   createScreenFlash();
+  createImpactRipple();
   setupUI();
   showUI('title');
 
@@ -614,6 +631,107 @@ function updateScreenFlash(dt: number) {
   }
 }
 
+// === ROUND 6: BALL IMPACT RIPPLE ===
+function createImpactRipple() {
+  // Ring geometry on the table surface — expands and fades on ball bounce
+  const geo = new SphereGeometry(0.04, 16, 1); // flat ring approximated with sphere
+  // Actually use a ring/circle
+  const ringGeo = new BufferGeometry();
+  const ringVerts: number[] = [];
+  const segments = 32;
+  for (let i = 0; i < segments; i++) {
+    const a1 = (i / segments) * Math.PI * 2;
+    const a2 = ((i + 1) / segments) * Math.PI * 2;
+    ringVerts.push(Math.cos(a1), 0, Math.sin(a1));
+    ringVerts.push(Math.cos(a2), 0, Math.sin(a2));
+  }
+  ringGeo.setAttribute('position', new Float32BufferAttribute(ringVerts, 3));
+  const mat = new LineBasicMaterial({
+    color: 0x00ffff,
+    transparent: true,
+    opacity: 0,
+    blending: AdditiveBlending,
+  });
+  impactRippleMesh = new LineSegments(ringGeo, mat) as any;
+  (impactRippleMesh as any).position.set(0, TABLE_HEIGHT + 0.017, 0);
+  (impactRippleMesh as any).scale.set(0.01, 1, 0.01);
+  (impactRippleMesh as any).visible = false;
+  world.scene.add(impactRippleMesh as any);
+}
+
+function triggerImpactRipple(x: number, z: number, color: number) {
+  if (!impactRippleMesh) return;
+  impactRippleMesh.position.set(x, TABLE_HEIGHT + 0.017, z);
+  (impactRippleMesh.material as LineBasicMaterial).color.set(color);
+  impactRippleScale = 0.01;
+  impactRippleOpacity = 0.6;
+  impactRippleActive = true;
+  impactRippleMesh.visible = true;
+}
+
+function updateImpactRipple(dt: number) {
+  if (!impactRippleActive || !impactRippleMesh) return;
+  impactRippleScale += dt * 1.5; // expand
+  impactRippleOpacity -= dt * 1.8; // fade
+  if (impactRippleOpacity <= 0) {
+    impactRippleActive = false;
+    impactRippleMesh.visible = false;
+    return;
+  }
+  impactRippleMesh.scale.set(impactRippleScale, 1, impactRippleScale);
+  (impactRippleMesh.material as LineBasicMaterial).opacity = impactRippleOpacity;
+}
+
+// === ROUND 6: AI TAUNT DISPLAY ===
+function showAITaunt(text: string) {
+  const entity = uiEntities.get('taunt');
+  if (entity && entity.object3D) entity.object3D.visible = true;
+  const doc = getDoc('taunt');
+  const opp = gsm.getCurrentSeasonOpponent();
+  setText(doc, 'taunt-name', opp ? opp.name : 'AI');
+  setText(doc, 'taunt-text', text);
+  tauntTimer = 2.5;
+  tauntVisible = true;
+}
+
+function updateAITaunt(dt: number) {
+  // Cooldown
+  if (gsm.tauntCooldown > 0) gsm.tauntCooldown -= dt;
+
+  if (tauntVisible) {
+    tauntTimer -= dt;
+    if (tauntTimer <= 0) {
+      tauntVisible = false;
+      const entity = uiEntities.get('taunt');
+      if (entity && entity.object3D) entity.object3D.visible = false;
+    }
+  }
+}
+
+// === ROUND 6: LEVEL-UP NOTIFICATION ===
+function showLevelUpNotification(level: number) {
+  levelUpLevel = level;
+  levelUpTimer = 3.0;
+  const entity = uiEntities.get('levelup');
+  if (entity && entity.object3D) entity.object3D.visible = true;
+  const doc = getDoc('levelup');
+  setText(doc, 'levelup-text', `LEVEL ${level}!`);
+  // Check for unlocks at this level
+  const unlock = LEVEL_UNLOCKS.find(u => u.level === level);
+  setText(doc, 'levelup-unlock', unlock ? `Unlocked: ${unlock.name}` : '');
+  audio.playLevelUp();
+}
+
+function updateLevelUp(dt: number) {
+  if (levelUpTimer > 0) {
+    levelUpTimer -= dt;
+    if (levelUpTimer <= 0) {
+      const entity = uiEntities.get('levelup');
+      if (entity && entity.object3D) entity.object3D.visible = false;
+    }
+  }
+}
+
 // === PARTICLE POOL (Round 4) ===
 function getPooledParticle(color: number): Mesh {
   if (particlePool.length > 0) {
@@ -678,6 +796,10 @@ function setupUI() {
     { name: 'season', config: '/ui/season.json', maxWidth: 0.9, maxHeight: 1.0, pos: [0, TABLE_HEIGHT + 0.7, -0.5], type: 'world' },
     // Round 5: Match analysis
     { name: 'analysis', config: '/ui/analysis.json', maxWidth: 0.85, maxHeight: 0.8, pos: [0, TABLE_HEIGHT + 0.7, -0.4], type: 'world' },
+    // Round 6: AI taunt bubble
+    { name: 'taunt', config: '/ui/taunt.json', maxWidth: 0.3, maxHeight: 0.08, type: 'follower', offset: [0.22, -0.08, -0.5] },
+    // Round 6: Level-up notification
+    { name: 'levelup', config: '/ui/levelup.json', maxWidth: 0.4, maxHeight: 0.12, type: 'follower', offset: [0, 0.1, -0.5] },
   ];
 
   panels.forEach(p => {
@@ -721,7 +843,7 @@ function showUI(state: GameState) {
     'pause', 'gameover', 'leaderboard', 'achievements', 'settings', 'help', 'stats',
     'tournament_bracket', 'drills', 'drillhud', 'rallycounter', 'matchpoint',
     'daily', 'tutorial', 'windind', 'replay', 'camera', 'commentary',
-    'season', 'analysis',
+    'season', 'analysis', 'taunt', 'levelup',
   ];
 
   allPanels.forEach(name => {
@@ -762,6 +884,14 @@ function showUI(state: GameState) {
 
 function updatePanelContent(state: GameState) {
   switch (state) {
+    case 'title': {
+      const doc = getDoc('title');
+      if (doc) {
+        const lvl = gsm.getPlayerLevel();
+        setText(doc, 'title-level', `Level ${lvl.level} — ${gsm.totalXP} XP`);
+      }
+      break;
+    }
     case 'leaderboard': {
       const doc = getDoc('leaderboard');
       if (doc) {
@@ -809,6 +939,10 @@ function updatePanelContent(state: GameState) {
         setText(doc, 'stat-points', `${gsm.totalPointsWon}`);
         const unlocked = gsm.achievements.filter(a => a.unlocked).length;
         setText(doc, 'stat-achievements', `${unlocked}/${gsm.achievements.length}`);
+        // Round 6: Level/XP
+        const lvl = gsm.getPlayerLevel();
+        setText(doc, 'stat-level', `${lvl.level}`);
+        setText(doc, 'stat-xp', `${gsm.totalXP}`);
       }
       break;
     }
@@ -828,6 +962,12 @@ function updatePanelContent(state: GameState) {
         setText(doc, 'result-mode', gsm.mode === 'daily'
           ? `DAILY ${activeDailyMods.map(m => m.icon).join(' ')}`
           : gsm.mode.toUpperCase());
+        // Round 6: XP display
+        const lvl = gsm.getPlayerLevel();
+        setText(doc, 'result-xp', `+${gsm.pendingXP} XP`);
+        const pctBar = Math.round((lvl.progressXP / (lvl.nextLevelXP - lvl.currentLevelXP)) * 20);
+        const xpBar = '█'.repeat(Math.max(0, Math.min(20, pctBar))) + '░'.repeat(Math.max(0, 20 - pctBar));
+        setText(doc, 'result-level', `Lv.${lvl.level} ${xpBar}`);
       }
       break;
     }
@@ -1381,6 +1521,10 @@ function startSeasonRound() {
   gsm.setsToWin = 1;
   showToast(`VS ${opp.name} — ${opp.title}`);
   audio.playTournamentFanfare();
+  // Round 6: Opening taunt
+  gsm.resetMatchTaunts();
+  const taunt = gsm.getSeasonTaunt('onGameStart');
+  if (taunt) setTimeout(() => { showAITaunt(taunt); audio.playTauntCue(); }, 2000);
   startGame(0); // Difficulty managed by season AI
 }
 
@@ -1503,6 +1647,16 @@ function endGame() {
     ? `${gsm.playerSets}-${gsm.aiSets} (${gsm.playerScore}-${gsm.aiScore})`
     : `${gsm.playerScore}-${gsm.aiScore}`;
   gsm.addLeaderboardEntry(scoreStr, gsm.mode, DIFFICULTIES[gsm.difficulty].name);
+
+  // Round 6: XP award
+  const xpEarned = gsm.calculateMatchXP(playerWon);
+  const xpResult = gsm.awardXP(xpEarned);
+  // Round 6: Taunt-back achievement
+  if (gsm.mode === 'season' && playerWon && gsm.tauntsReceivedThisMatch >= 5) {
+    gsm.unlockAchievement('taunt_back');
+  }
+  gsm.resetMatchTaunts();
+
   gsm.savePersistence();
 
   // Stop deuce drone
@@ -1514,6 +1668,11 @@ function endGame() {
   if (windEntity && windEntity.object3D) windEntity.object3D.visible = false;
 
   if (playerWon) audio.playWin(); else audio.playLose();
+
+  // Round 6: Show level-up notification if leveled up
+  if (xpResult.newLevel) {
+    setTimeout(() => showLevelUpNotification(xpResult.level), 1500);
+  }
 
   ball.active = false;
   ballMesh.visible = false;
@@ -1848,6 +2007,15 @@ function update(dt: number) {
 
   // Round 4: Camera
   updateCamera(realDt);
+
+  // Round 6: Impact ripple
+  updateImpactRipple(realDt);
+
+  // Round 6: AI taunts
+  updateAITaunt(realDt);
+
+  // Round 6: Level-up notification
+  updateLevelUp(realDt);
 
   // Toast timer
   if (toastTimer > 0) {
@@ -2247,6 +2415,9 @@ function updateBallPhysics(dt: number) {
       ball.onTable = true;
       audio.playTableBounce();
 
+      // Round 6: Impact ripple on table bounce
+      triggerImpactRipple(ball.position.x, ball.position.z, gsm.getTheme().accent);
+
       // Placement drill target check
       if (gsm.state === 'drill_active' && gsm.currentDrill === 'placement' && ball.lastHitBy === 'player') {
         placementTargets.forEach(t => {
@@ -2570,6 +2741,16 @@ function scorePoint(winner: 'player' | 'ai', reason: string) {
     if (gsm.isMatchPoint || gsm.currentStreak >= 5 || (gsm.isDeuce && gsm.playerScore === gsm.aiScore + 1)) {
       scheduleReplay(1.5);
     }
+
+    // Round 6: AI taunt when player scores (opponent reacts)
+    if (gsm.mode === 'season') {
+      let tauntTrigger: 'onPlayerScores' | 'onPlayerWinning' | 'onDeuce' | 'onMatchPoint' = 'onPlayerScores';
+      if (gsm.isMatchPoint && gsm.playerScore > gsm.aiScore) tauntTrigger = 'onMatchPoint';
+      else if (gsm.isDeuce) tauntTrigger = 'onDeuce';
+      else if (gsm.playerScore > gsm.aiScore + 3) tauntTrigger = 'onPlayerWinning';
+      const taunt = gsm.getSeasonTaunt(tauntTrigger);
+      if (taunt) { showAITaunt(taunt); audio.playTauntCue(); }
+    }
   } else {
     audio.playPointLost();
     showToast(`${gsm.playerScore} - ${gsm.aiScore}`);
@@ -2580,6 +2761,16 @@ function scorePoint(winner: 'player' | 'ai', reason: string) {
     }
     // Reset consecutive aces
     consecutiveAcesInRow = 0;
+
+    // Round 6: AI taunt when AI scores
+    if (gsm.mode === 'season') {
+      let tauntTrigger: 'onAIScores' | 'onAIWinning' | 'onDeuce' | 'onMatchPoint' = 'onAIScores';
+      if (gsm.isMatchPoint && gsm.aiScore > gsm.playerScore) tauntTrigger = 'onMatchPoint';
+      else if (gsm.isDeuce) tauntTrigger = 'onDeuce';
+      else if (gsm.aiScore > gsm.playerScore + 3) tauntTrigger = 'onAIWinning';
+      const taunt = gsm.getSeasonTaunt(tauntTrigger);
+      if (taunt) { showAITaunt(taunt); audio.playTauntCue(); }
+    }
   }
 
   gsm.rallyCount = 0;

@@ -1,0 +1,4 @@
+<panel width="320" height="80" background-color="#0a1a2a" border-radius="10" border-color="#ffcc00" border-width="2" opacity="0.95">
+  <text id="levelup-text" font-size="28" color="#ffcc00" text-align="center" margin-top="10" font-weight="bold">LEVEL UP!</text>
+  <text id="levelup-unlock" font-size="12" color="#88ccff" text-align="center" margin-top="48"></text>
+</panel>

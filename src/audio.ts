@@ -515,4 +515,28 @@ export class AudioManager {
     osc.start();
     osc.stop(ctx.currentTime + 0.3);
   }
+
+  // Round 6: Level up — triumphant ascending arpeggio
+  playLevelUp() {
+    const notes = [523, 659, 784, 1047]; // C5-E5-G5-C6
+    notes.forEach((freq, i) => {
+      setTimeout(() => {
+        this.playTone(freq, 'sine', 0.12, 0.15);
+        this.playTone(freq * 1.5, 'triangle', 0.04, 0.1);
+      }, i * 100);
+    });
+    // Shimmer on the final note
+    setTimeout(() => this.playNoise(0.08, 0.03, 2000), 350);
+  }
+
+  // Round 6: AI taunt cue — short digital blip
+  playTauntCue() {
+    this.playTone(400, 'square', 0.03, 0.05);
+    this.playTone(350, 'square', 0.02, 0.04);
+  }
+
+  // Round 6: Impact ripple — subtle low thud
+  playImpactRipple() {
+    this.playTone(120, 'sine', 0.06, 0.04);
+  }
 }

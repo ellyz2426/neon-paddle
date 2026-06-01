@@ -1,0 +1,4 @@
+<panel width="280" height="60" background-color="#111122" border-radius="8" border-color="#ff00ff" border-width="1" opacity="0.9">
+  <text id="taunt-name" font-size="10" color="#ff00ff" margin-left="10" margin-top="6">AI</text>
+  <text id="taunt-text" font-size="14" color="#ffffff" margin-left="10" margin-top="24" font-style="italic">"..."</text>
+</panel>

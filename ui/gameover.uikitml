@@ -60,6 +60,8 @@
   <span id="result-streak" class="go-stat">Best Streak: 0</span>
   <span id="result-aces" class="go-stat">Aces: 0</span>
   <span id="result-mode" class="go-mode">MATCH</span>
+  <span id="result-xp" class="go-stat" style="color: #ffcc00; margin-top: 0.6; font-size: 1.6;">+0 XP</span>
+  <span id="result-level" class="go-stat" style="color: #88ccff; font-size: 1.0;">Lv.1</span>
   <div id="btn-rematch" class="go-btn"><span class="go-btn-text">REMATCH</span></div>
   <div id="btn-title" class="go-btn"><span class="go-btn-text">TITLE</span></div>
 </div>

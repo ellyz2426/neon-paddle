@@ -68,6 +68,84 @@ export const COMMENTARY: CommentaryLine[] = [
   { trigger: 'cross_court', lines: ['Wide cross-court!', 'Angled beautifully!', 'Stretching the opponent!', 'Sharp angle!'] },
 ];
 
+// === XP / LEVEL PROGRESSION ===
+export const XP_PER_WIN = 100;
+export const XP_PER_LOSS = 30;
+export const XP_PER_ACE = 15;
+export const XP_PER_SMASH = 10;
+export const XP_PER_RALLY_10 = 20;
+export const XP_PER_ACHIEVEMENT = 50;
+export const XP_SEASON_WIN_BONUS = 50;
+export const XP_TOURNAMENT_WIN_BONUS = 200;
+
+export function xpForLevel(level: number): number {
+  // Total XP required to reach a given level (progressive curve)
+  return Math.floor(100 * level + 50 * Math.pow(level, 1.4));
+}
+
+export function getLevelFromXP(totalXP: number): { level: number; currentLevelXP: number; nextLevelXP: number; progressXP: number } {
+  let level = 1;
+  while (level < 50 && xpForLevel(level + 1) <= totalXP) level++;
+  const thisReq = xpForLevel(level);
+  const nextReq = xpForLevel(level + 1);
+  return {
+    level,
+    currentLevelXP: thisReq,
+    nextLevelXP: nextReq,
+    progressXP: totalXP - thisReq,
+  };
+}
+
+export const MAX_LEVEL = 50;
+
+// Level-gated content: [requiredLevel, type, index]
+export interface LevelUnlock {
+  level: number;
+  type: 'paddle_skin' | 'ball_skin' | 'theme' | 'title';
+  index: number;
+  name: string;
+}
+
+export const LEVEL_UNLOCKS: LevelUnlock[] = [
+  { level: 3, type: 'ball_skin', index: 1, name: 'Plasma Pink Ball' },
+  { level: 5, type: 'paddle_skin', index: 2, name: 'Glacier Paddle' },
+  { level: 8, type: 'theme', index: 1, name: 'Crimson Theme' },
+  { level: 10, type: 'ball_skin', index: 3, name: 'Ice Crystal Ball' },
+  { level: 13, type: 'paddle_skin', index: 3, name: 'Plasma Paddle' },
+  { level: 15, type: 'theme', index: 2, name: 'Neon Green Theme' },
+  { level: 18, type: 'ball_skin', index: 5, name: 'Void Purple Ball' },
+  { level: 20, type: 'paddle_skin', index: 4, name: 'Champion Paddle' },
+  { level: 25, type: 'theme', index: 3, name: 'Ultraviolet Theme' },
+  { level: 30, type: 'ball_skin', index: 7, name: 'Inferno Red Ball' },
+  { level: 35, type: 'paddle_skin', index: 5, name: 'Emerald Paddle' },
+  { level: 40, type: 'theme', index: 4, name: 'Solar Blaze Theme' },
+  { level: 45, type: 'ball_skin', index: 6, name: 'Chrome Silver Ball' },
+  { level: 50, type: 'title', index: 0, name: 'Grand Master Title' },
+];
+
+// === AI TAUNTS (Season Mode) ===
+export interface AITaunt {
+  opponentName: string;
+  onGameStart: string[];
+  onAIScores: string[];
+  onPlayerScores: string[];
+  onAIWinning: string[];
+  onPlayerWinning: string[];
+  onDeuce: string[];
+  onMatchPoint: string[];
+}
+
+export const AI_TAUNTS: AITaunt[] = [
+  { opponentName: 'BYTE', onGameStart: ['Initializing...', 'First match jitters!'], onAIScores: ['Beginner\'s luck!', 'Got one!'], onPlayerScores: ['How?!', 'Lucky shot...'], onAIWinning: ['Maybe I\'m not so bad!', 'On a roll!'], onPlayerWinning: ['This is tough...', 'Going easy on me?'], onDeuce: ['So close!', 'Tied up!'], onMatchPoint: ['Almost there!', 'Don\'t choke...'] },
+  { opponentName: 'FLICKER', onGameStart: ['Too slow!', 'Try to keep up!'], onAIScores: ['Blink and you miss it!', 'Speed kills!'], onPlayerScores: ['Fast enough...', 'Hmph.'], onAIWinning: ['Can\'t catch me!', 'Lightning strikes!'], onPlayerWinning: ['Impossible speed!', 'Slowing down?'], onDeuce: ['Quick reflexes!', 'Who\'s faster?'], onMatchPoint: ['In a flash!', 'Almost done!'] },
+  { opponentName: 'ECHO', onGameStart: ['I return everything.', 'The wall is ready.'], onAIScores: ['Patience pays off.', 'Steady.'], onPlayerScores: ['Interesting...', 'Good shot.'], onAIWinning: ['Can\'t break through.', 'Walls don\'t fall.'], onPlayerWinning: ['Cracking...', 'Finding gaps?'], onDeuce: ['Endurance test.', 'Who breaks first?'], onMatchPoint: ['The wall holds.', 'One more...'] },
+  { opponentName: 'PRISM', onGameStart: ['Watch the spin!', 'Curves ahead!'], onAIScores: ['Didn\'t see that curve!', 'Spin city!'], onPlayerScores: ['Read my spin?!', 'Lucky read...'], onAIWinning: ['Spinning circles!', 'Dizzy yet?'], onPlayerWinning: ['Adapting fast...', 'Spin-proof?'], onDeuce: ['Twist and shout!', 'Spinning on edge!'], onMatchPoint: ['One last curve!', 'Final spin!'] },
+  { opponentName: 'NEXUS', onGameStart: ['I\'ve studied you.', 'Every move calculated.'], onAIScores: ['As predicted.', 'Part of the plan.'], onPlayerScores: ['Unexpected...', 'Recalculating.'], onAIWinning: ['Strategy wins.', 'According to plan.'], onPlayerWinning: ['Adjusting tactics...', 'New approach.'], onDeuce: ['Mind games!', 'Chess at the table.'], onMatchPoint: ['Checkmate soon.', 'Endgame.'] },
+  { opponentName: 'BLITZ', onGameStart: ['FULL POWER!', 'Bring it!'], onAIScores: ['CRUSHED!', 'Feel that power!'], onPlayerScores: ['You hit hard too...', 'Strong!'], onAIWinning: ['OVERWHELMING!', 'Power rules!'], onPlayerWinning: ['Impossible force!', 'Fighting back?!'], onDeuce: ['POWER CLASH!', 'Force vs force!'], onMatchPoint: ['ONE MORE BLAST!', 'Finishing blow!'] },
+  { opponentName: 'SURGE', onGameStart: ['No mercy.', 'Prepare yourself.'], onAIScores: ['Relentless.', 'Wave after wave.'], onPlayerScores: ['Not bad.', 'Resilient.'], onAIWinning: ['The surge rises!', 'Can\'t stop this!'], onPlayerWinning: ['Impressive.', 'Fighting the tide?'], onDeuce: ['Pressure builds!', 'Who breaks?'], onMatchPoint: ['The final wave.', 'Unstoppable.'] },
+  { opponentName: 'ZENITH', onGameStart: ['The summit awaits.', 'Prove yourself.'], onAIScores: ['As expected.', 'Perfection.'], onPlayerScores: ['...Worthy.', 'Remarkable.'], onAIWinning: ['The peak is mine.', 'Untouchable.'], onPlayerWinning: ['You challenge the peak?', 'Incredible.'], onDeuce: ['At the summit together.', 'A true rival.'], onMatchPoint: ['The final step.', 'Ascend or fall.'] },
+];
+
 // === GAME STATES ===
 export type GameState = 'title' | 'modeselect' | 'difficulty' | 'playing' | 'paused' | 'gameover'
   | 'leaderboard' | 'achievements' | 'settings' | 'help' | 'stats' | 'countdown'
@@ -320,6 +398,15 @@ export function getDefaultAchievements(): Achievement[] {
     { id: 'serve_ace_5_match', name: 'Ace Barrage', description: '5 aces in a single match', unlocked: false },
     { id: 'rally_variety', name: 'Versatile', description: 'Win via ace, smash, and rally in one match', unlocked: false },
     { id: 'close_match', name: 'Nail Biter', description: 'Win a set 13-11 or closer', unlocked: false },
+    // Round 6: XP, progression, taunts (8)
+    { id: 'level_5', name: 'Rising Star', description: 'Reach Level 5', unlocked: false },
+    { id: 'level_10', name: 'Contender', description: 'Reach Level 10', unlocked: false },
+    { id: 'level_25', name: 'Elite', description: 'Reach Level 25', unlocked: false },
+    { id: 'level_50', name: 'Grand Master', description: 'Reach Level 50', unlocked: false },
+    { id: 'xp_1000', name: 'XP Hoarder', description: 'Earn 1000 total XP', unlocked: false },
+    { id: 'first_unlock', name: 'New Gear', description: 'Unlock your first item via leveling', unlocked: false },
+    { id: 'all_unlocks', name: 'Fully Loaded', description: 'Unlock all level-gated items', unlocked: false },
+    { id: 'taunt_back', name: 'Shut Them Up', description: 'Win a season match after getting taunted 5+ times', unlocked: false },
   ];
 }
 
@@ -536,6 +623,15 @@ export class GameStateManager {
   netRollersThisMatch: number = 0;
   ballSkinsUsed: Set<number> = new Set();
 
+  // Round 6: XP / Level progression
+  totalXP: number = 0;
+  pendingXP: number = 0; // XP earned in current match (displayed at game over)
+  lastLevelUp: number = 0; // track level-up for notification
+
+  // Round 6: AI taunt tracking (season mode)
+  tauntsReceivedThisMatch: number = 0;
+  tauntCooldown: number = 0; // prevent spam
+
   achievements: Achievement[] = getDefaultAchievements();
   leaderboard: { score: string; mode: string; difficulty: string; date: string }[] = [];
 
@@ -575,6 +671,8 @@ export class GameStateManager {
         this.winStreak = data.winStreak ?? 0;
         this.seasonBestRun = data.seasonBestRun ?? 0;
         if (data.ballSkinsUsed) this.ballSkinsUsed = new Set(data.ballSkinsUsed);
+        // Round 6: XP
+        this.totalXP = data.totalXP ?? 0;
       }
     } catch { /* ignore */ }
   }
@@ -604,6 +702,7 @@ export class GameStateManager {
         ballSkinIndex: this.ballSkinIndex,
         seasonBestRun: this.seasonBestRun,
         ballSkinsUsed: [...this.ballSkinsUsed],
+        totalXP: this.totalXP,
       }));
     } catch { /* ignore */ }
   }
@@ -913,5 +1012,73 @@ export class GameStateManager {
     }
     this.lastCommentary = line;
     return line;
+  }
+
+  // Round 6: XP system
+  calculateMatchXP(won: boolean): number {
+    let xp = won ? XP_PER_WIN : XP_PER_LOSS;
+    xp += this.aces * XP_PER_ACE;
+    xp += this.smashes * XP_PER_SMASH;
+    if (this.bestRally >= 10) xp += XP_PER_RALLY_10;
+    if (this.mode === 'season' && won) xp += XP_SEASON_WIN_BONUS;
+    if (this.mode === 'tournament' && won) xp += XP_TOURNAMENT_WIN_BONUS;
+    // Difficulty multiplier
+    xp = Math.round(xp * (1 + this.difficulty * 0.25));
+    return xp;
+  }
+
+  awardXP(amount: number): { newLevel: boolean; level: number; unlocks: LevelUnlock[] } {
+    const oldInfo = getLevelFromXP(this.totalXP);
+    this.pendingXP = amount;
+    this.totalXP += amount;
+    const newInfo = getLevelFromXP(this.totalXP);
+    const newLevel = newInfo.level > oldInfo.level;
+
+    // Check level-based achievements
+    if (newInfo.level >= 5) this.unlockAchievement('level_5');
+    if (newInfo.level >= 10) this.unlockAchievement('level_10');
+    if (newInfo.level >= 25) this.unlockAchievement('level_25');
+    if (newInfo.level >= 50) this.unlockAchievement('level_50');
+    if (this.totalXP >= 1000) this.unlockAchievement('xp_1000');
+
+    // Check for new unlocks
+    const unlocks: LevelUnlock[] = [];
+    for (const u of LEVEL_UNLOCKS) {
+      if (u.level > oldInfo.level && u.level <= newInfo.level) {
+        unlocks.push(u);
+      }
+    }
+    if (unlocks.length > 0) this.unlockAchievement('first_unlock');
+    // Check if all level-gated items unlocked
+    const allUnlocked = LEVEL_UNLOCKS.every(u => newInfo.level >= u.level);
+    if (allUnlocked) this.unlockAchievement('all_unlocks');
+
+    this.lastLevelUp = newLevel ? newInfo.level : 0;
+    this.savePersistence();
+    return { newLevel, level: newInfo.level, unlocks };
+  }
+
+  getPlayerLevel(): { level: number; currentLevelXP: number; nextLevelXP: number; progressXP: number } {
+    return getLevelFromXP(this.totalXP);
+  }
+
+  // Round 6: AI taunts
+  getSeasonTaunt(trigger: 'onGameStart' | 'onAIScores' | 'onPlayerScores' | 'onAIWinning' | 'onPlayerWinning' | 'onDeuce' | 'onMatchPoint'): string | null {
+    if (this.mode !== 'season') return null;
+    if (this.tauntCooldown > 0) return null;
+    const opp = this.getCurrentSeasonOpponent();
+    if (!opp) return null;
+    const tauntData = AI_TAUNTS.find(t => t.opponentName === opp.name);
+    if (!tauntData) return null;
+    const lines = tauntData[trigger];
+    if (!lines || lines.length === 0) return null;
+    this.tauntsReceivedThisMatch++;
+    this.tauntCooldown = 3.0; // 3 second cooldown between taunts
+    return lines[Math.floor(Math.random() * lines.length)];
+  }
+
+  resetMatchTaunts() {
+    this.tauntsReceivedThisMatch = 0;
+    this.tauntCooldown = 0;
   }
 }

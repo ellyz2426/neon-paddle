@@ -71,6 +71,7 @@
 <div class="title-panel">
   <span class="game-title">NEON PADDLE</span>
   <span class="subtitle">VR Table Tennis</span>
+  <span id="title-level" class="subtitle" style="font-size: 1.2; color: #ffcc00; margin-top: 0.3;">Level 1</span>
   <div id="btn-play" class="btn"><span class="btn-text">PLAY</span></div>
   <div class="btn-row">
     <div id="btn-leaderboard" class="btn-small"><span class="btn-small-text">SCORES</span></div>

@@ -1,0 +1,80 @@
+{
+  "element": {
+    "sourceTag": "panel",
+    "type": "custom",
+    "children": [
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "LEVEL UP!"
+        ],
+        "properties": {
+          "id": "levelup-text",
+          "fontSize": "28",
+          "color": "#ffcc00",
+          "textAlign": "center",
+          "marginTop": "10",
+          "fontWeight": "bold"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [],
+        "properties": {
+          "id": "levelup-unlock",
+          "fontSize": "12",
+          "color": "#88ccff",
+          "textAlign": "center",
+          "marginTop": "48"
+        },
+        "dataUid": "uid-3"
+      }
+    ],
+    "properties": {
+      "width": "320",
+      "height": "80",
+      "backgroundColor": "#0a1a2a",
+      "borderRadius": "10",
+      "borderColor": "#ffcc00",
+      "borderWidth": "2",
+      "opacity": "0.95"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {},
+  "ranges": {
+    "uid-1": {
+      "start": {
+        "line": 0,
+        "column": 0
+      },
+      "end": {
+        "line": 3,
+        "column": 8
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 128
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 2,
+        "column": 2
+      },
+      "end": {
+        "line": 2,
+        "column": 102
+      }
+    }
+  }
+}
