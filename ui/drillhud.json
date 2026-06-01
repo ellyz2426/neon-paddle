@@ -1,0 +1,202 @@
+{
+  "element": {
+    "type": "container",
+    "sourceTag": "div",
+    "children": [
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "RETURN DRILL"
+        ],
+        "properties": {
+          "id": "drillhud-name",
+          "class": "drillhud-title"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "0 / 20"
+        ],
+        "properties": {
+          "id": "drillhud-score",
+          "class": "drillhud-score"
+        },
+        "dataUid": "uid-3"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "60s"
+        ],
+        "properties": {
+          "id": "drillhud-timer",
+          "class": "drillhud-timer"
+        },
+        "dataUid": "uid-4"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [],
+        "properties": {
+          "id": "drillhud-target",
+          "class": "drillhud-target"
+        },
+        "dataUid": "uid-5"
+      }
+    ],
+    "properties": {
+      "class": "drillhud-panel"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {
+    "drillhud-panel": {
+      "content": {
+        "display": "flex",
+        "flexDirection": "column",
+        "paddingTop": "1",
+        "paddingBottom": "1",
+        "paddingLeft": "2",
+        "paddingRight": "2",
+        "backgroundColor": "rgba(0, 0, 0, 0.75)",
+        "borderColor": "#33ff88",
+        "borderWidth": "0.08",
+        "borderRadius": 0.8
+      }
+    },
+    "drillhud-title": {
+      "content": {
+        "fontSize": "1.8",
+        "color": "#33ff88",
+        "fontWeight": "bold"
+      }
+    },
+    "drillhud-score": {
+      "content": {
+        "fontSize": "2.5",
+        "color": "#ffffff",
+        "fontWeight": "bold"
+      }
+    },
+    "drillhud-timer": {
+      "content": {
+        "fontSize": "1.5",
+        "color": "#ffaa00"
+      }
+    },
+    "drillhud-target": {
+      "content": {
+        "fontSize": "1.2",
+        "color": "#aaaaaa"
+      }
+    }
+  },
+  "ranges": {
+    "drillhud-panel": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 17
+      }
+    },
+    "drillhud-title": {
+      "start": {
+        "line": 13,
+        "column": 2
+      },
+      "end": {
+        "line": 13,
+        "column": 17
+      }
+    },
+    "drillhud-score": {
+      "start": {
+        "line": 18,
+        "column": 2
+      },
+      "end": {
+        "line": 18,
+        "column": 17
+      }
+    },
+    "drillhud-timer": {
+      "start": {
+        "line": 23,
+        "column": 2
+      },
+      "end": {
+        "line": 23,
+        "column": 17
+      }
+    },
+    "drillhud-target": {
+      "start": {
+        "line": 27,
+        "column": 2
+      },
+      "end": {
+        "line": 27,
+        "column": 18
+      }
+    },
+    "uid-1": {
+      "start": {
+        "line": 32,
+        "column": 0
+      },
+      "end": {
+        "line": 37,
+        "column": 6
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 33,
+        "column": 2
+      },
+      "end": {
+        "line": 33,
+        "column": 69
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 34,
+        "column": 2
+      },
+      "end": {
+        "line": 34,
+        "column": 64
+      }
+    },
+    "uid-4": {
+      "start": {
+        "line": 35,
+        "column": 2
+      },
+      "end": {
+        "line": 35,
+        "column": 61
+      }
+    },
+    "uid-5": {
+      "start": {
+        "line": 36,
+        "column": 2
+      },
+      "end": {
+        "line": 36,
+        "column": 60
+      }
+    }
+  }
+}

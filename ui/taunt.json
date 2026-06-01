@@ -1,0 +1,82 @@
+{
+  "element": {
+    "sourceTag": "panel",
+    "type": "custom",
+    "children": [
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "AI"
+        ],
+        "properties": {
+          "id": "taunt-name",
+          "fontSize": "10",
+          "color": "#ff00ff",
+          "marginLeft": "10",
+          "marginTop": "6"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "\"...\""
+        ],
+        "properties": {
+          "id": "taunt-text",
+          "fontSize": "14",
+          "color": "#ffffff",
+          "marginLeft": "10",
+          "marginTop": "24",
+          "fontStyle": "italic"
+        },
+        "dataUid": "uid-3"
+      }
+    ],
+    "properties": {
+      "width": "280",
+      "height": "60",
+      "backgroundColor": "#111122",
+      "borderRadius": "8",
+      "borderColor": "#ff00ff",
+      "borderWidth": "1",
+      "opacity": "0.9"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {},
+  "ranges": {
+    "uid-1": {
+      "start": {
+        "line": 0,
+        "column": 0
+      },
+      "end": {
+        "line": 3,
+        "column": 8
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 96
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 2,
+        "column": 2
+      },
+      "end": {
+        "line": 2,
+        "column": 120
+      }
+    }
+  }
+}
