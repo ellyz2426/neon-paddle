@@ -283,6 +283,7 @@ export const GAME_MODES: GameMode[] = [
   { id: 'tournament', name: 'TOURNAMENT', description: '4-round bracket challenge', rounds: 0 },
   { id: 'daily', name: 'DAILY CHALLENGE', description: 'Random daily modifiers', rounds: 0 },
   { id: 'season', name: 'SEASON', description: '8-opponent ranked season', rounds: 0 },
+  { id: 'freeplay', name: 'FREE PLAY', description: 'Casual warm-up, no score', rounds: 0 },
 ];
 
 // === DIFFICULTY ===
@@ -452,6 +453,15 @@ export function getDefaultAchievements(): Achievement[] {
     { id: 'xp_5000', name: 'XP Legend', description: 'Earn 5000 total XP', unlocked: false },
     { id: 'season_rematch', name: 'Revenge', description: 'Beat a Season opponent you previously lost to', unlocked: false },
     { id: 'all_cameras', name: 'Director', description: 'Try all 5 camera modes in one match', unlocked: false },
+    // Round 8: Final polish (8)
+    { id: 'freeplay_100', name: 'Warm Up Pro', description: 'Hit 100 balls in Free Play', unlocked: false },
+    { id: 'total_hits_500', name: 'Ball Magnet', description: '500 career total hits', unlocked: false },
+    { id: 'total_hits_1000', name: 'Iron Paddle', description: '1000 career total hits', unlocked: false },
+    { id: 'win_all_diff', name: 'Trifecta', description: 'Win on Easy, Medium, and Hard', unlocked: false },
+    { id: 'max_speed_hit', name: 'Mach Speed', description: 'Hit a ball at max power (8+)', unlocked: false },
+    { id: 'games_100', name: 'Centurion', description: 'Play 100 matches', unlocked: false },
+    { id: 'xp_10000', name: 'XP Machine', description: 'Earn 10000 total XP', unlocked: false },
+    { id: 'season_3_complete', name: 'Lifer', description: 'Complete 3 full seasons', unlocked: false },
   ];
 }
 
@@ -690,6 +700,12 @@ export class GameStateManager {
   camerasUsed: Set<string> = new Set();
   seasonPreviousResults: Record<string, boolean> = {}; // opponent name -> last result
 
+  // Round 8: Additional career tracking
+  totalCareerHits: number = 0;
+  difficultyWins: Set<number> = new Set(); // which difficulties beaten
+  freeplayHits: number = 0;
+  seasonsCompleted: number = 0;
+
   achievements: Achievement[] = getDefaultAchievements();
   leaderboard: { score: string; mode: string; difficulty: string; date: string }[] = [];
 
@@ -737,6 +753,11 @@ export class GameStateManager {
         this.dailyChallengeWins = data.dailyChallengeWins ?? 0;
         this.deuceSetWins = data.deuceSetWins ?? 0;
         if (data.seasonPreviousResults) this.seasonPreviousResults = data.seasonPreviousResults;
+        // Round 8
+        this.totalCareerHits = data.totalCareerHits ?? 0;
+        if (data.difficultyWins) this.difficultyWins = new Set(data.difficultyWins);
+        this.freeplayHits = data.freeplayHits ?? 0;
+        this.seasonsCompleted = data.seasonsCompleted ?? 0;
       }
     } catch { /* ignore */ }
   }
@@ -772,6 +793,10 @@ export class GameStateManager {
         dailyChallengeWins: this.dailyChallengeWins,
         deuceSetWins: this.deuceSetWins,
         seasonPreviousResults: this.seasonPreviousResults,
+        totalCareerHits: this.totalCareerHits,
+        difficultyWins: [...this.difficultyWins],
+        freeplayHits: this.freeplayHits,
+        seasonsCompleted: this.seasonsCompleted,
       }));
     } catch { /* ignore */ }
   }

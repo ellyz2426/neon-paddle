@@ -1,207 +1,133 @@
-# 🏓 Neon Paddle VR
+# Neon Paddle VR 🏓
 
-A holodeck-style table tennis game built with IWSDK (Immersive Web SDK). Play in VR or in your browser — neon-lit regulation table, AI opponents with personalities, season mode, tournament brackets, instant replays, match analysis, and procedural audio.
+A holodeck-style table tennis game built with IWSDK 0.4.1. Play in VR or browser with full physics, AI opponents, progression systems, and neon aesthetics.
 
-**[Play Now →](https://ellyz2426.github.io/neon-paddle/)**
+## 🎮 Play
+
+**Live:** [https://ellyz2426.github.io/neon-paddle/](https://ellyz2426.github.io/neon-paddle/)
+
+## Controls
+
+### Browser
+| Key | Action |
+|-----|--------|
+| WASD / Arrows | Move paddle |
+| Space (hold) | Charge serve |
+| ESC | Pause |
+| 1-5 | Camera modes |
+| R | Instant replay |
+| Q | Quick rematch |
+
+### VR
+| Input | Action |
+|-------|--------|
+| Right Thumbstick | Move paddle |
+| Right Trigger (hold) | Charge serve |
+| B Button | Pause |
+| Laser Pointer | Menu interaction |
 
 ## Features
 
 ### Core Gameplay
-- **Regulation table tennis** — 2.74m × 1.525m table with proper net height (15.25cm)
-- **Real ball physics** — gravity, air resistance, Magnus effect spin influence, 4-substep integration
-- **Spin mechanics** — topspin, backspin, sidespin affecting trajectory and bounce behavior
-- **Serve system** — hold-to-charge power bar, release to launch with power + spin
-- **Table edge hits** — unpredictable bounce deflections with special effects
-- **Net rollers** — ball barely clearing the net with dramatic sound
-- **Scoring** — first to 11, win by 2, with proper deuce and alternating serve rules
+- Regulation 2.74m × 1.525m table with neon wireframe
+- 4-substep ball physics with gravity, air resistance, Magnus effect spin
+- Spin mechanics: topspin, backspin, sidespin
+- AI with 3 difficulty levels + advanced shot selection (6 shot types)
+- Hit detection with power and spin-aware returns
+- Smash, ace, edge hit, net roller, and double bounce detection
+- LET rule on serve
 
-### Game Modes (9)
-| Mode | Description |
-|------|-------------|
-| **Match** | Best of 5 sets to 11 points |
-| **Quick Match** | Single set to 11 |
-| **Rally Mode** | Keep the rally going as long as possible |
-| **Speed Rally** | 60 seconds — score as many hits as possible |
-| **Serve Practice** | Perfect your serve technique |
-| **Training** | AI returns everything for practice |
-| **Tournament** | 4-round bracket: beat SPARK → PULSE → VORTEX → CIPHER |
-| **Daily Challenge** | Random daily modifiers for unique gameplay |
-| **Season** | 8-opponent ranked season with standings |
+### Game Modes (10)
+1. **Match** — Best of 5 sets to 11, win by 2
+2. **Quick Match** — Single set
+3. **Rally Mode** — Keep the rally going
+4. **Speed Rally** — 60 seconds, max hits
+5. **Serve Practice** — Perfect your serve
+6. **Training** — AI returns everything
+7. **Tournament** — 4-round bracket (SPARK → CIPHER)
+8. **Daily Challenge** — 10 random modifiers (wind, ghost ball, tiny paddle, etc.)
+9. **Season** — 8 ranked opponents with personality taunts
+10. **Free Play** — Casual warm-up, no scoring
 
-### Season Mode
-- **8 ranked AI opponents** with distinct playstyles and titles:
-  - BYTE (The Rookie) → FLICKER (Speed Demon) → ECHO (The Wall) → PRISM (Spin Artist) → NEXUS (The Tactician) → BLITZ (Power Player) → SURGE (The Aggressive) → ZENITH (Grand Champion)
-- W/L record tracking across the full season
-- Consecutive win streak tracking with best-run persistence
-- Season-specific achievements for completion, perfection, and defeating ZENITH
-
-### AI Opponent
-- 3 difficulty levels: Easy, Medium, Hard
-- **Advanced shot selection** — AI chooses from drives, topspin, lobs, drop shots, cross-court angles, and smashes based on situation
-- Adjustable reaction time, speed, spin reading, and aggression
-- Tournament mode features 4 unique opponents with escalating difficulty
-- Season mode features 8 distinct opponents with personality-driven stats
-
-### Match Analysis
-- **Post-match breakdown** shown after every game:
-  - Serve win rate and return win rate
-  - Aces, smashes, edge hits, net rollers
-  - Rally stats: longest, average length, total rallies, total hits
-  - Best streak, comebacks
-  - **Performance rating** and letter grade (D → S)
-  - **MVP moment** highlighting the most impressive achievement
-
-### Daily Challenge System
-- Deterministic daily seed generates 1-2 random modifiers per day
-- **10 modifiers**: Fast Ball, Tiny Paddle, Big Ball, Wind, Power Serves, Low Gravity, Spin Madness, Sudden Death, Turbo AI, Ghost Ball
-- Wind system with lateral force and visual particles
-- Ghost Ball fades with speed for added difficulty
-- Daily best score tracking
-
-### Practice Drills
-- **Return Drill** — Return 20 serves within 60 seconds
-- **Placement** — Hit target zones on the opponent's side
-- **Spin Training** — Apply spin to returns
-- **Smash Drill** — Practice smash shots on high balls
-
-### Instant Replay System
-- Automatically records last 5 seconds of ball, paddle, and AI positions
-- Triggers automatically on dramatic moments (match point, streaks, deuce clutch)
-- Manual trigger with **R** key during gameplay
-- Plays back at 0.5x speed with cinematic camera
-- Replay overlay with progress indicator
-
-### Camera System (5 modes)
-| Key | Mode | Description |
-|-----|------|-------------|
-| **1** | Default | Standard player view |
-| **2** | Overhead | Bird's-eye view of the table |
-| **3** | Side View | TV broadcast angle |
-| **4** | Cinematic | Slow-orbiting tracking camera |
-| **5** | Ball Cam | Camera follows the ball |
-
-### Commentary System
-- Dynamic procedural text commentary on game events
-- Context-sensitive lines for aces, smashes, long rallies, comebacks, deuce, match point, net rollers, edge hits, and AI shot types
-- Subtle audio cue when commentary appears
-
-### Visual Effects
-- **Holodeck environment** — neon grid floor/ceiling, floating wireframe decorations, 40 ambient particles
-- **Ball shadow** — trajectory preview projected onto the table surface
-- **Spin visualization** — rotating ring lines showing spin direction and intensity
-- **Speed-based ball trail** — color influenced by ball skin selection + speed
-- **Power paddle glow** — paddle emits glow proportional to swing speed, color shifts cyan→white
-- **Screen flash VFX** — dramatic flash on aces, smashes, and crucial points
-- **Particle effects** — pooled particles for hits, aces, smashes, edge hits, net rollers
-- **Camera shake** — on smash shots and power hits
-- **Slow-motion** — dramatic slow-mo on match point scoring
-- **Deuce tension** — pulsing table edges and tension drone during deuce
-- **Ghost ball** — ball opacity decreases with speed in daily challenges
-- **Wind particles** — visual indicator near ball during wind challenges
-
-### Audio
-- **Procedural Web Audio** — all sounds generated in real-time, no audio files needed
-- **Hit variety** — sound changes with power level (soft/normal/power) and spin amount
-- **Shot-specific sounds** — unique audio for drop shots, lobs, smashes
-- **Crowd reactions** — cheers on aces, gasps on match point, "ooh" on long rallies
-- **Deuce drone** — low-frequency tension rumble during deuce
-- **Slow-mo audio** — pitch drop entering slow-mo, rise on exit
-- **Replay sounds** — rewinding tape effect and speed-up chirp
-- **Commentary cue** — subtle chime before text appears
-- **Dramatic point** — bass impact on crucial scores
-- **Tournament fanfare** — special sounds for bracket progression
-- **Ambient music** — bass drone + triangle pad with LFO modulation
-
-### Tutorial System
-- 5-step guided tutorial: Movement, Serving, Hitting, Spin & Power, Scoring
-- Step-by-step navigation with skip option
-
-### Achievements (52)
-Track your progress across core gameplay, rallies, winning, streaks, special modes, career milestones, table tricks, daily challenges, customization, season, and ball variety. Highlights:
-- 🏆 **Champion** — Win the tournament
-- 🏅 **Season Champion** — Complete a full season
-- 💎 **Undefeated** — Win all 8 season matches
-- 🎯 **Apex Predator** — Defeat ZENITH in season
-- ⚡ **Unstoppable** — 10 consecutive points
-- 🏃 **Marathon** — 100-hit rally
-- 🎯 **Edge Lord** — Score on a table edge hit
-- 🔥 **Triple Threat** — 3 aces in a row
-- 💯 **Flawless** — Win a match without losing a set
-- 🎓 **Scholar** — Complete all 4 drills
-- 🏅 **Winning Streak** — Win 5 consecutive matches
-- 🎱 **Ball Collector** — Try all 8 ball skins
-- 🎯 **Ace Barrage** — 5 aces in a single match
-- 🔄 **Versatile** — Win via ace, smash, and rally in one match
-- 💀 **Nail Biter** — Win a set 13-11 or closer
+### Progression
+- XP system: earn XP from matches with difficulty multipliers
+- 50 levels with progressive XP curve
+- 14 level-gated unlocks (paddle skins, ball skins, themes)
+- 76 achievements across gameplay, career, and exploration
+- Career stats with win rate, aces, smashes, longest rally
+- Match history (last 20 matches with full details)
+- Leaderboard (top 20 scores)
+- Post-match analysis with performance rating (D → S grade)
 
 ### Customization
-- **5 table themes** — Holodeck, Crimson, Neon Green, Ultraviolet, Solar Blaze
-- **6 paddle skins** — Neon Cyan, Inferno, Glacier, Plasma, Champion, Emerald
-- **8 ball skins** — Classic White, Plasma Pink, Solar Flare, Ice Crystal, Toxic Green, Void Purple, Chrome Silver, Inferno Red (each with unique trail colors)
+- 5 table themes: Holodeck, Crimson, Neon Green, Ultraviolet, Solar Blaze
+- 6 paddle skins with distinct colors and glow
+- 8 ball skins with unique trail colors
+- 4 colorblind accessibility modes
 - Volume controls for SFX and music
 
-### Persistence
-- Career stats: games, wins, win rate, aces, smashes, longest rally, total points, win streak
-- Top 20 leaderboard with scores, modes, and dates
-- Achievement progress saved to localStorage
-- Drill completion tracking
-- Season best run tracking
-- Ball skin preference persistence
-- Daily challenge best scores
+### Visual Effects
+- Holodeck environment with neon grid floor/ceiling
+- 12 floating wireframe decorations
+- 40 ambient particles
+- Ball shadow on table surface
+- Ball reflection on table
+- Spin visualization with rotating rings
+- Speed-based ball trail (blue → cyan → orange → red)
+- Power paddle glow (scales with swing speed)
+- Camera shake on smashes
+- Screen flash on dramatic moments
+- Slow-motion on match point scoring
+- Deuce tension effects (pulsing table edges + drone)
+- Ball impact ripple on bounces
+- Paddle trail effect
+- Victory celebration fireworks
+- Particle object pooling (max 150)
 
-## Controls
+### Audio
+- 25+ procedural Web Audio SFX
+- Ambient drone music
+- Hit sounds vary with power and spin
+- Crowd reactions (cheers, gasps, oohs)
+- Shot-specific audio (drop, lob, smash)
+- Dramatic point scoring bass impact
+- Commentary cues
+- AI taunt blips
+- Level-up arpeggio
+- Victory burst sparkles
 
-### Browser (Keyboard)
-| Key | Action |
-|-----|--------|
-| **W/A/S/D** or **Arrow Keys** | Move paddle |
-| **Space** (hold + release) | Serve — hold to charge, release to launch |
-| **Escape** | Pause/Resume |
-| **1-5** | Switch camera mode |
-| **R** | Trigger instant replay |
+### AI
+- 3 base difficulties with tunable speed, reaction, accuracy, aggression
+- 8 Season opponents with unique personalities and preferred shots
+- 4 Tournament opponents with escalating difficulty
+- 6 shot types: drive, topspin, lob, drop shot, cross-court, smash
+- Situational taunts with 7 trigger contexts and cooldown
 
-### VR (XR Controllers)
-| Input | Action |
-|-------|--------|
-| **Right Thumbstick** | Move paddle |
-| **Right Trigger** (hold + release) | Serve — hold to charge, release to launch |
-| **B Button** | Pause/Resume |
-| **Laser Pointer** | Navigate menus |
+### Systems
+- Instant replay (auto-trigger on dramatic moments + manual R key)
+- 5 camera modes with smooth transitions
+- Procedural commentary system
+- Tutorial (5 guided steps)
+- Quick restart (Q key)
+- 30 PanelUI templates (zero HTML DOM)
+- All UI via IWSDK spatial PanelUI — XR-compatible
 
 ## Tech Stack
-- **[IWSDK](https://iwsdk.dev)** 0.4.1 — Immersive Web SDK for WebXR
-- **PanelUI** — All game UI via 27 spatial `.uikitml` panels (zero HTML DOM overlays)
-- **Web Audio API** — Procedural sound synthesis
-- **TypeScript** — Strict mode, no runtime errors
 
-## Project Structure
-```
-neon-paddle/
-├── src/
-│   ├── index.ts       # Main game loop, rendering, input, physics, replay, camera
-│   ├── types.ts       # Types, constants, themes, achievements, state, season, analysis
-│   └── audio.ts       # Procedural audio manager with 25+ sound types
-├── ui/                # 27 .uikitml spatial UI templates
-│   ├── title.uikitml
-│   ├── hud.uikitml
-│   ├── tournament.uikitml
-│   ├── season.uikitml
-│   ├── analysis.uikitml
-│   ├── replay.uikitml
-│   ├── camera.uikitml
-│   ├── commentary.uikitml
-│   └── ... (19 more)
-├── vite.config.ts
-└── tsconfig.json
-```
+- **IWSDK** 0.4.1 with dual-runtime (VR + browser)
+- **TypeScript** — 3 source files, ~7,000 lines
+- **PanelUI** (.uikitml) — 30 spatial UI templates
+- **Web Audio API** — All procedural, no audio files
+- **localStorage** — Persistence for stats, achievements, progression
 
 ## Development
 
 ```bash
 npm install
-npm run dev         # Start dev server with hot reload
-npm run build       # Production build to dist/
+npm run dev     # Dev server with hot reload
+npm run build   # Production build to dist/
 ```
 
 ## License
-MIT
+
+Built with IWSDK (Immersive Web SDK) by Meta.

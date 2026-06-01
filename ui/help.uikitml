@@ -28,6 +28,11 @@
     color: #cccccc;
     margin-top: 0.2;
   }
+  .help-key {
+    font-size: 1.1;
+    color: #88ccff;
+    margin-top: 0.15;
+  }
   .back-btn {
     background-color: rgba(255, 0, 255, 0.1);
     border-color: #ff00ff;
@@ -49,26 +54,32 @@
 <div class="help-panel">
   <span class="help-title">HOW TO PLAY</span>
   <span class="help-section">Browser Controls</span>
-  <span class="help-text">WASD / Arrows - Move paddle</span>
-  <span class="help-text">Space (hold) - Charge serve, release to serve</span>
+  <span class="help-text">WASD / Arrows — Move paddle</span>
+  <span class="help-text">Space (hold) — Charge serve, release to serve</span>
   <span class="help-text">Ball auto-hits when near paddle</span>
-  <span class="help-text">ESC - Pause</span>
+  <span class="help-text">ESC — Pause</span>
+  <span class="help-section">Keyboard Shortcuts</span>
+  <span class="help-key">1-5 — Switch camera mode</span>
+  <span class="help-key">R — Instant replay</span>
+  <span class="help-key">Q — Quick rematch (game over)</span>
   <span class="help-section">VR Controls</span>
-  <span class="help-text">Right Thumbstick - Move paddle</span>
-  <span class="help-text">Right Trigger (hold) - Charge serve</span>
-  <span class="help-text">B Button - Pause</span>
-  <span class="help-text">Laser Pointer - Menu interaction</span>
+  <span class="help-text">Right Thumbstick — Move paddle</span>
+  <span class="help-text">Right Trigger (hold) — Charge serve</span>
+  <span class="help-text">B Button — Pause</span>
+  <span class="help-text">Laser Pointer — Menu interaction</span>
   <span class="help-section">Rules</span>
   <span class="help-text">First to 11, win by 2</span>
   <span class="help-text">Serve alternates every 2 points</span>
   <span class="help-text">Ball must bounce once on each side</span>
   <span class="help-text">Double bounce = point for hitter</span>
-  <span class="help-section">Game Modes</span>
-  <span class="help-text">Match: Best of 5 sets</span>
-  <span class="help-text">Quick: Single set to 11</span>
+  <span class="help-section">Game Modes (10)</span>
+  <span class="help-text">Match: Best of 5 sets | Quick: Single set</span>
   <span class="help-text">Rally: Keep the rally alive</span>
-  <span class="help-text">Speed: 60s, max rally hits</span>
-  <span class="help-text">Serve Practice: Perfect serves</span>
-  <span class="help-text">Training: AI returns everything</span>
+  <span class="help-text">Speed: 60s max hits | Training: AI returns all</span>
+  <span class="help-text">Tournament: 4-round bracket</span>
+  <span class="help-text">Daily: Random modifiers | Season: 8 opponents</span>
+  <span class="help-text">Free Play: Casual warm-up, no score</span>
+  <span class="help-section">Accessibility</span>
+  <span class="help-text">Settings > Vision: Colorblind modes available</span>
   <div id="btn-back-help" class="back-btn"><span class="back-text">BACK</span></div>
 </div>

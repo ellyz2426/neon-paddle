@@ -358,19 +358,85 @@
             "sourceTag": "span",
             "type": "custom",
             "children": [
+              "Career Hits"
+            ],
+            "properties": {
+              "class": "stat-label"
+            },
+            "dataUid": "uid-34"
+          },
+          {
+            "sourceTag": "span",
+            "type": "custom",
+            "children": [
+              "0"
+            ],
+            "properties": {
+              "id": "stat-hits",
+              "class": "stat-val"
+            },
+            "dataUid": "uid-35"
+          }
+        ],
+        "properties": {
+          "class": "stat-row"
+        },
+        "dataUid": "uid-33"
+      },
+      {
+        "type": "container",
+        "sourceTag": "div",
+        "children": [
+          {
+            "sourceTag": "span",
+            "type": "custom",
+            "children": [
+              "Seasons Done"
+            ],
+            "properties": {
+              "class": "stat-label"
+            },
+            "dataUid": "uid-37"
+          },
+          {
+            "sourceTag": "span",
+            "type": "custom",
+            "children": [
+              "0"
+            ],
+            "properties": {
+              "id": "stat-seasons",
+              "class": "stat-val"
+            },
+            "dataUid": "uid-38"
+          }
+        ],
+        "properties": {
+          "class": "stat-row"
+        },
+        "dataUid": "uid-36"
+      },
+      {
+        "type": "container",
+        "sourceTag": "div",
+        "children": [
+          {
+            "sourceTag": "span",
+            "type": "custom",
+            "children": [
               "BACK"
             ],
             "properties": {
               "class": "back-text"
             },
-            "dataUid": "uid-34"
+            "dataUid": "uid-40"
           }
         ],
         "properties": {
           "id": "btn-back-stats",
           "class": "back-btn"
         },
-        "dataUid": "uid-33"
+        "dataUid": "uid-39"
       }
     ],
     "properties": {
@@ -526,7 +592,7 @@
         "column": 0
       },
       "end": {
-        "line": 70,
+        "line": 72,
         "column": 6
       }
     },
@@ -847,16 +913,76 @@
       },
       "end": {
         "line": 69,
-        "column": 85
+        "column": 119
       }
     },
     "uid-34": {
       "start": {
         "line": 69,
-        "column": 44
+        "column": 24
       },
       "end": {
         "line": 69,
+        "column": 67
+      }
+    },
+    "uid-35": {
+      "start": {
+        "line": 69,
+        "column": 67
+      },
+      "end": {
+        "line": 69,
+        "column": 113
+      }
+    },
+    "uid-36": {
+      "start": {
+        "line": 70,
+        "column": 2
+      },
+      "end": {
+        "line": 70,
+        "column": 123
+      }
+    },
+    "uid-37": {
+      "start": {
+        "line": 70,
+        "column": 24
+      },
+      "end": {
+        "line": 70,
+        "column": 68
+      }
+    },
+    "uid-38": {
+      "start": {
+        "line": 70,
+        "column": 68
+      },
+      "end": {
+        "line": 70,
+        "column": 117
+      }
+    },
+    "uid-39": {
+      "start": {
+        "line": 71,
+        "column": 2
+      },
+      "end": {
+        "line": 71,
+        "column": 85
+      }
+    },
+    "uid-40": {
+      "start": {
+        "line": 71,
+        "column": 44
+      },
+      "end": {
+        "line": 71,
         "column": 79
       }
     }

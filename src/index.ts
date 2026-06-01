@@ -1095,6 +1095,9 @@ function updatePanelContent(state: GameState) {
         const lvl = gsm.getPlayerLevel();
         setText(doc, 'stat-level', `${lvl.level}`);
         setText(doc, 'stat-xp', `${gsm.totalXP}`);
+        // Round 8: Career hits
+        setText(doc, 'stat-hits', `${gsm.totalCareerHits}`);
+        setText(doc, 'stat-seasons', `${gsm.seasonsCompleted}`);
       }
       break;
     }
@@ -1299,7 +1302,7 @@ function bindUIEvents() {
         showUI('season');
       } else if (mode.id === 'daily') {
         showUI('daily_challenge');
-      } else if (mode.id === 'training' || mode.id === 'rally' || mode.id === 'speed') {
+      } else if (mode.id === 'training' || mode.id === 'rally' || mode.id === 'speed' || mode.id === 'freeplay') {
         startGame(1);
       } else {
         showUI('difficulty');
@@ -1760,6 +1763,8 @@ function endSeasonRound(playerWon: boolean) {
 
   if (gsm.isSeasonComplete()) {
     gsm.unlockAchievement('season_complete');
+    gsm.seasonsCompleted++;
+    if (gsm.seasonsCompleted >= 3) gsm.unlockAchievement('season_3_complete');
     if (gsm.seasonWins === SEASON_OPPONENTS.length) {
       gsm.unlockAchievement('season_perfect');
     }
@@ -1817,11 +1822,18 @@ function endGame() {
   gsm.totalAces += gsm.aces;
   gsm.totalSmashes += gsm.smashes;
   if (gsm.bestRally > gsm.longestRally) gsm.longestRally = gsm.bestRally;
+  // Round 8: Career hit tracking
+  gsm.totalCareerHits += gsm.totalHits;
+  if (gsm.totalCareerHits >= 500) gsm.unlockAchievement('total_hits_500');
+  if (gsm.totalCareerHits >= 1000) gsm.unlockAchievement('total_hits_1000');
 
   // Achievement checks
   if (playerWon) {
     gsm.unlockAchievement('first_win');
     if (gsm.difficulty === 2) gsm.unlockAchievement('hard_win');
+    // Round 8: Track difficulty wins
+    gsm.difficultyWins.add(gsm.difficulty);
+    if (gsm.difficultyWins.size >= 3) gsm.unlockAchievement('win_all_diff');
     if (gsm.aiScore === 0 && (gsm.mode === 'match' || gsm.mode === 'quick')) {
       gsm.unlockAchievement('shutout');
       gsm.unlockAchievement('perfect_set');
@@ -1838,6 +1850,7 @@ function endGame() {
   if (gsm.gamesPlayed >= 10) gsm.unlockAchievement('games10');
   if (gsm.gamesPlayed >= 25) gsm.unlockAchievement('games25');
   if (gsm.gamesPlayed >= 50) gsm.unlockAchievement('games50');
+  if (gsm.gamesPlayed >= 100) gsm.unlockAchievement('games_100');
   if (gsm.totalAces >= 10) gsm.unlockAchievement('ace10');
   if (gsm.smashes >= 10) gsm.unlockAchievement('smash10');
   // Round 5: New achievements
@@ -1889,6 +1902,8 @@ function endGame() {
 
   // Round 7: XP 5000 achievement
   if (gsm.totalXP >= 5000) gsm.unlockAchievement('xp_5000');
+  // Round 8: XP 10000 achievement
+  if (gsm.totalXP >= 10000) gsm.unlockAchievement('xp_10000');
 
   // Round 7: No-smash win
   if (playerWon && gsm.smashes === 0 && (gsm.mode === 'match' || gsm.mode === 'quick')) {
@@ -2508,6 +2523,8 @@ function handleInput(dt: number) {
     if (dist < PADDLE_RADIUS + BALL_RADIUS + 0.03) {
       const paddleVel = playerPaddlePos.clone().sub(lastPlayerPaddlePos).divideScalar(Math.max(dt, 0.001));
       const hitPower = Math.min(paddleVel.length() * 0.5 + 1, 8);
+      // Round 8: Mach Speed achievement
+      if (hitPower >= 7.5) gsm.unlockAchievement('max_speed_hit');
       const returnDir = new Vector3(
         (Math.random() - 0.5) * 1.0 + paddleVel.x * 0.3,
         1.0 + hitPower * 0.3,
@@ -2931,6 +2948,15 @@ function scorePoint(winner: 'player' | 'ai', reason: string) {
     return;
   }
 
+  // Round 8: Free play — no scoring, just reset ball
+  if (gsm.mode === 'freeplay') {
+    gsm.freeplayHits += gsm.totalHits > 0 ? 1 : 0;
+    if (gsm.totalHits >= 100) gsm.unlockAchievement('freeplay_100');
+    gsm.rallyCount = 0;
+    setTimeout(() => { if (gsm.state === 'playing') serveBall(); }, 800);
+    return;
+  }
+
   if (gsm.mode === 'rally' || gsm.mode === 'speed') {
     if (gsm.mode === 'rally') {
       gsm.totalRallies++;
@@ -3286,6 +3312,11 @@ function updateHUD() {
   } else if (gsm.mode === 'rally') {
     setText(doc, 'hud-score', `Rally: ${gsm.rallyCount}`);
     setText(doc, 'hud-sets', `Best: ${gsm.bestRally}`);
+  } else if (gsm.mode === 'freeplay') {
+    setText(doc, 'hud-score', `Hits: ${gsm.totalHits}`);
+    // Round 8: Ball speed indicator
+    const bSpeed = ball.active ? ball.velocity.length().toFixed(1) : '0.0';
+    setText(doc, 'hud-sets', `Speed: ${bSpeed} m/s`);
   } else {
     setText(doc, 'hud-score', `${gsm.playerScore} - ${gsm.aiScore}`);
     setText(doc, 'hud-sets', gsm.mode.toUpperCase());
