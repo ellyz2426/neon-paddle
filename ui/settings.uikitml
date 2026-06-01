@@ -101,5 +101,11 @@
     <span id="ballskin-name" class="setting-val">Classic White</span>
     <div id="btn-ballskin-next" class="setting-btn"><span class="setting-btn-text">&gt;</span></div>
   </div>
+  <div class="setting-row">
+    <span class="setting-label">VISION</span>
+    <div id="btn-cb-prev" class="setting-btn"><span class="setting-btn-text">&lt;</span></div>
+    <span id="cb-name" class="setting-val">NORMAL</span>
+    <div id="btn-cb-next" class="setting-btn"><span class="setting-btn-text">&gt;</span></div>
+  </div>
   <div id="btn-back-settings" class="back-btn"><span class="back-text">BACK</span></div>
 </div>

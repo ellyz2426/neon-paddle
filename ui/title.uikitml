@@ -83,4 +83,7 @@
     <div id="btn-help" class="btn-small"><span class="btn-small-text">HELP</span></div>
     <div id="btn-tutorial" class="btn-small"><span class="btn-small-text">TUTORIAL</span></div>
   </div>
+  <div class="btn-row">
+    <div id="btn-history" class="btn-small"><span class="btn-small-text">HISTORY</span></div>
+  </div>
 </div>

@@ -64,4 +64,5 @@
   <span id="result-level" class="go-stat" style="color: #88ccff; font-size: 1.0;">Lv.1</span>
   <div id="btn-rematch" class="go-btn"><span class="go-btn-text">REMATCH</span></div>
   <div id="btn-title" class="go-btn"><span class="go-btn-text">TITLE</span></div>
+  <span class="go-stat" style="font-size: 0.9; color: #666; margin-top: 0.5;">Press Q for quick rematch</span>
 </div>

@@ -8,7 +8,7 @@ import {
   BufferGeometry, Float32BufferAttribute,
   PanelUI, ScreenSpace, Follower, FollowBehavior, PanelDocument, UIKitDocument,
 } from '@iwsdk/core';
-import type { GameState, TournamentRound, CameraMode, AIShotConfig } from './types.js';
+import type { GameState, TournamentRound, CameraMode, AIShotConfig, MatchHistoryEntry } from './types.js';
 import {
   GameStateManager, BallState, TABLE_LENGTH, TABLE_WIDTH, TABLE_HEIGHT,
   NET_HEIGHT, BALL_RADIUS, PADDLE_RADIUS, PADDLE_THICKNESS, TABLE_EDGE_WIDTH,
@@ -17,6 +17,7 @@ import {
   CAMERA_MODES, AI_SHOTS, REPLAY_FPS, SEASON_OPPONENTS, SeasonOpponent,
   getLevelFromXP, LEVEL_UNLOCKS, AI_TAUNTS,
   XP_PER_WIN, XP_PER_LOSS, XP_PER_ACE, XP_PER_SMASH, XP_PER_RALLY_10,
+  COLORBLIND_MODES, COLORBLIND_OVERRIDES, ColorblindMode,
 } from './types.js';
 import { AudioManager } from './audio.js';
 
@@ -166,6 +167,30 @@ let tauntVisible = false;
 let levelUpTimer = 0;
 let levelUpLevel = 0;
 
+// Round 7: Ball reflection on table
+let ballReflection: Mesh | null = null;
+
+// Round 7: Paddle trail effect
+let paddleTrailPoints: Vector3[] = [];
+let paddleTrailLine: LineSegments | null = null;
+const PADDLE_TRAIL_LENGTH = 15;
+
+// Round 7: Victory celebration (fireworks)
+let victoryCelebration = false;
+let victoryCelebrationTimer = 0;
+
+// Round 7: Quick rematch tracking
+let consecutiveRematches = 0;
+
+// Round 7: Camera modes used in current match
+let camerasUsedThisMatch: Set<string> = new Set();
+
+// Round 7: Match timer tracking
+let matchStartTime = 0;
+
+// Round 7: Deuce set wins for achievement tracking
+let deuceSetWinsTotal = 0;
+
 // === ENTRY ===
 async function main() {
   const container = document.getElementById('app') as HTMLDivElement;
@@ -199,6 +224,8 @@ async function main() {
   createPowerGlow();
   createScreenFlash();
   createImpactRipple();
+  createBallReflection();
+  createPaddleTrail();
   setupUI();
   showUI('title');
 
@@ -682,6 +709,126 @@ function updateImpactRipple(dt: number) {
   (impactRippleMesh.material as LineBasicMaterial).opacity = impactRippleOpacity;
 }
 
+// === ROUND 7: BALL REFLECTION ON TABLE ===
+function createBallReflection() {
+  const geo = new SphereGeometry(BALL_RADIUS * 0.9, 8, 4);
+  const mat = new MeshBasicMaterial({
+    color: 0x00ffff,
+    transparent: true,
+    opacity: 0.08,
+    blending: AdditiveBlending,
+  });
+  ballReflection = new Mesh(geo, mat);
+  ballReflection.scale.set(1, 0.15, 1); // flatten for reflection look
+  ballReflection.visible = false;
+  world.scene.add(ballReflection);
+}
+
+function updateBallReflection() {
+  if (!ballReflection) return;
+  if (!ball.active || ball.position.y < TABLE_HEIGHT + BALL_RADIUS) {
+    ballReflection.visible = false;
+    return;
+  }
+  const bx = ball.position.x;
+  const bz = ball.position.z;
+  const onTable = Math.abs(bx) <= TABLE_WIDTH / 2 && Math.abs(bz) <= TABLE_LENGTH / 2;
+  if (onTable) {
+    ballReflection.visible = true;
+    // Mirror position below table surface
+    ballReflection.position.set(bx, TABLE_HEIGHT - 0.005, bz);
+    // Opacity fades with height
+    const h = ball.position.y - TABLE_HEIGHT;
+    const opacity = Math.max(0.02, 0.1 - h * 0.04);
+    (ballReflection.material as MeshBasicMaterial).opacity = opacity;
+    // Match ball skin color
+    const bs = gsm.getBallSkin();
+    (ballReflection.material as MeshBasicMaterial).color.set(bs.glow);
+  } else {
+    ballReflection.visible = false;
+  }
+}
+
+// === ROUND 7: PADDLE TRAIL EFFECT ===
+function createPaddleTrail() {
+  const geo = new BufferGeometry();
+  const positions = new Float32Array(PADDLE_TRAIL_LENGTH * 2 * 3);
+  geo.setAttribute('position', new Float32BufferAttribute(positions, 3));
+  const mat = new LineBasicMaterial({
+    color: gsm.getTheme().accent,
+    transparent: true,
+    opacity: 0.15,
+    blending: AdditiveBlending,
+  });
+  paddleTrailLine = new LineSegments(geo, mat);
+  world.scene.add(paddleTrailLine);
+}
+
+function updatePaddleTrail() {
+  if (!paddleTrailLine) return;
+  paddleTrailPoints.push(playerPaddlePos.clone());
+  if (paddleTrailPoints.length > PADDLE_TRAIL_LENGTH) paddleTrailPoints.shift();
+
+  const positions = (paddleTrailLine.geometry.attributes.position as any).array as Float32Array;
+  positions.fill(0);
+  for (let i = 0; i < paddleTrailPoints.length - 1 && i < PADDLE_TRAIL_LENGTH - 1; i++) {
+    const idx = i * 6;
+    positions[idx] = paddleTrailPoints[i].x;
+    positions[idx + 1] = paddleTrailPoints[i].y;
+    positions[idx + 2] = paddleTrailPoints[i].z;
+    positions[idx + 3] = paddleTrailPoints[i + 1].x;
+    positions[idx + 4] = paddleTrailPoints[i + 1].y;
+    positions[idx + 5] = paddleTrailPoints[i + 1].z;
+  }
+  paddleTrailLine.geometry.attributes.position.needsUpdate = true;
+
+  // Fade based on paddle speed
+  const speed = playerPaddlePos.clone().sub(lastPlayerPaddlePos).length() * 60;
+  const opacity = Math.min(0.35, speed * 0.15);
+  (paddleTrailLine.material as LineBasicMaterial).opacity = opacity;
+  (paddleTrailLine.material as LineBasicMaterial).color.set(gsm.getTheme().accent);
+}
+
+// === ROUND 7: VICTORY CELEBRATION (FIREWORKS) ===
+function startVictoryCelebration() {
+  victoryCelebration = true;
+  victoryCelebrationTimer = 3.0; // 3 seconds of fireworks
+}
+
+function updateVictoryCelebration(dt: number) {
+  if (!victoryCelebration) return;
+  victoryCelebrationTimer -= dt;
+  if (victoryCelebrationTimer <= 0) {
+    victoryCelebration = false;
+    return;
+  }
+  // Spawn firework particles in waves
+  if (Math.random() < 0.15) {
+    const theme = gsm.getTheme();
+    const colors = [theme.accent, theme.highlight, 0xffcc00, 0xff44ff, 0x44ffff];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const burstPos = new Vector3(
+      (Math.random() - 0.5) * 2,
+      TABLE_HEIGHT + 0.5 + Math.random() * 1.5,
+      (Math.random() - 0.5) * 1.5
+    );
+    // Burst pattern — spawn particles in a sphere
+    for (let i = 0; i < 12 && particles.length < MAX_PARTICLES; i++) {
+      const mesh = getPooledParticle(color);
+      mesh.position.copy(burstPos);
+      const angle = (i / 12) * Math.PI * 2;
+      const elev = (Math.random() - 0.5) * Math.PI;
+      const vel = new Vector3(
+        Math.cos(angle) * Math.cos(elev) * (1.5 + Math.random()),
+        Math.sin(elev) * 2 + Math.random(),
+        Math.sin(angle) * Math.cos(elev) * (1.5 + Math.random())
+      );
+      particles.push({ mesh, vel, life: 1.0 + Math.random() * 0.5 });
+    }
+    audio.playVictoryBurst();
+  }
+}
+
 // === ROUND 6: AI TAUNT DISPLAY ===
 function showAITaunt(text: string) {
   const entity = uiEntities.get('taunt');
@@ -800,6 +947,8 @@ function setupUI() {
     { name: 'taunt', config: '/ui/taunt.json', maxWidth: 0.3, maxHeight: 0.08, type: 'follower', offset: [0.22, -0.08, -0.5] },
     // Round 6: Level-up notification
     { name: 'levelup', config: '/ui/levelup.json', maxWidth: 0.4, maxHeight: 0.12, type: 'follower', offset: [0, 0.1, -0.5] },
+    // Round 7: Match history
+    { name: 'match_history', config: '/ui/matchhistory.json', maxWidth: 0.9, maxHeight: 1.0, pos: [0, TABLE_HEIGHT + 0.7, -0.5], type: 'world' },
   ];
 
   panels.forEach(p => {
@@ -843,7 +992,7 @@ function showUI(state: GameState) {
     'pause', 'gameover', 'leaderboard', 'achievements', 'settings', 'help', 'stats',
     'tournament_bracket', 'drills', 'drillhud', 'rallycounter', 'matchpoint',
     'daily', 'tutorial', 'windind', 'replay', 'camera', 'commentary',
-    'season', 'analysis', 'taunt', 'levelup',
+    'season', 'analysis', 'taunt', 'levelup', 'match_history',
   ];
 
   allPanels.forEach(name => {
@@ -872,6 +1021,7 @@ function showUI(state: GameState) {
     case 'tutorial': showPanels.push('tutorial'); break;
     case 'season': case 'season_standings': showPanels.push('season'); break;
     case 'analysis': showPanels.push('analysis'); break;
+    case 'match_history': showPanels.push('match_history'); break;
   }
 
   showPanels.forEach(name => {
@@ -924,6 +1074,8 @@ function updatePanelContent(state: GameState) {
         setText(doc, 'theme-name', gsm.getTheme().name);
         setText(doc, 'skin-name', gsm.getSkin().name);
         setText(doc, 'ballskin-name', gsm.getBallSkin().name);
+        const cbMode = COLORBLIND_MODES.find(m => m.id === gsm.colorblindMode);
+        setText(doc, 'cb-name', cbMode?.name ?? 'NORMAL');
       }
       break;
     }
@@ -1000,6 +1152,10 @@ function updatePanelContent(state: GameState) {
     }
     case 'analysis': {
       updateAnalysisContent();
+      break;
+    }
+    case 'match_history': {
+      updateMatchHistoryContent();
       break;
     }
   }
@@ -1093,6 +1249,27 @@ function updateAnalysisContent() {
   setText(doc, 'an-mvp-moment', `MVP: ${mvp}`);
 }
 
+// === ROUND 7: MATCH HISTORY ===
+function updateMatchHistoryContent() {
+  const doc = getDoc('match_history');
+  if (!doc) return;
+  for (let i = 0; i < 10; i++) {
+    const entry = gsm.matchHistory[i];
+    if (entry) {
+      const result = entry.won ? 'W' : 'L';
+      const scoreText = entry.playerSets > 0
+        ? `${result} ${entry.playerSets}-${entry.aiSets} (${entry.playerScore}-${entry.aiScore})`
+        : `${result} ${entry.playerScore}-${entry.aiScore}`;
+      setText(doc, `mh-${i}`, scoreText);
+      const detail = `${entry.mode.toUpperCase()} ${entry.opponent ? 'vs ' + entry.opponent : ''} | ${entry.date}`;
+      setText(doc, `mh-detail-${i}`, detail);
+    } else {
+      setText(doc, `mh-${i}`, '');
+      setText(doc, `mh-detail-${i}`, '');
+    }
+  }
+}
+
 // === UI EVENT BINDING ===
 function bindUIEvents() {
   // Title
@@ -1103,6 +1280,7 @@ function bindUIEvents() {
   bindButton('title', 'btn-help', () => { audio.playClick(); showUI('help'); });
   bindButton('title', 'btn-stats', () => { audio.playClick(); showUI('stats'); });
   bindButton('title', 'btn-tutorial', () => { audio.playClick(); gsm.tutorialStep = 0; showUI('tutorial'); });
+  bindButton('title', 'btn-history', () => { audio.playClick(); showUI('match_history'); });
 
   // Mode select
   GAME_MODES.forEach((mode, i) => {
@@ -1155,7 +1333,7 @@ function bindUIEvents() {
   bindButton('gameover', 'btn-title', () => { audio.playClick(); showUI('title'); });
 
   // Back buttons
-  ['leaderboard', 'achievements', 'settings', 'help', 'stats', 'tournament_bracket', 'drills', 'daily', 'season'].forEach(panel => {
+  ['leaderboard', 'achievements', 'settings', 'help', 'stats', 'tournament_bracket', 'drills', 'daily', 'season', 'match_history'].forEach(panel => {
     bindButton(panel, `btn-back-${panel}`, () => { audio.playClick(); showUI('title'); });
   });
 
@@ -1250,6 +1428,19 @@ function bindUIEvents() {
     audio.playClick();
     showUI('gameover');
   });
+  // Round 7: Colorblind mode cycling
+  bindButton('settings', 'btn-cb-prev', () => {
+    const modes: ColorblindMode[] = ['none', 'deuteranopia', 'protanopia', 'tritanopia'];
+    const idx = modes.indexOf(gsm.colorblindMode);
+    gsm.colorblindMode = modes[(idx - 1 + modes.length) % modes.length];
+    gsm.savePersistence(); updatePanelContent('settings'); applyTheme();
+  });
+  bindButton('settings', 'btn-cb-next', () => {
+    const modes: ColorblindMode[] = ['none', 'deuteranopia', 'protanopia', 'tritanopia'];
+    const idx = modes.indexOf(gsm.colorblindMode);
+    gsm.colorblindMode = modes[(idx + 1) % modes.length];
+    gsm.savePersistence(); updatePanelContent('settings'); applyTheme();
+  });
 }
 
 function bindButton(panel: string, id: string, cb: () => void) {
@@ -1276,6 +1467,11 @@ function startGame(diffIndex: number) {
   slowMoTimeScale = 1.0;
   deuceIntensity = 0;
   audio.stopDeuceDrone();
+  // Round 7
+  camerasUsedThisMatch = new Set(['default']);
+  matchStartTime = performance.now() / 1000;
+  victoryCelebration = false;
+  paddleTrailPoints = [];
   startCountdown();
 }
 
@@ -1529,7 +1725,12 @@ function startSeasonRound() {
 }
 
 function endSeasonRound(playerWon: boolean) {
+  const oppName = SEASON_OPPONENTS[gsm.seasonRound]?.name ?? '';
+  // Round 7: Track revenge — check if previously lost to this opponent
+  const prevResult = gsm.seasonPreviousResults[oppName];
   gsm.advanceSeason(playerWon, gsm.playerScore, gsm.aiScore);
+  // Round 7: Update season previous results tracking
+  gsm.seasonPreviousResults[oppName] = playerWon;
   seasonAI = null;
 
   if (!playerWon) {
@@ -1538,6 +1739,11 @@ function endSeasonRound(playerWon: boolean) {
   } else {
     showToast('MATCH WON!');
     audio.playCrowdCheer();
+    // Round 7: Revenge achievement
+    if (prevResult === false) {
+      gsm.unlockAchievement('season_rematch');
+      showToast('REVENGE!');
+    }
     // Check achievements
     if (gsm.seasonRound === SEASON_OPPONENTS.length && gsm.seasonStandings[7]?.won) {
       gsm.unlockAchievement('beat_zenith');
@@ -1595,6 +1801,8 @@ function endGame() {
     }
     // Daily modifier achievements
     if (playerWon) {
+      gsm.dailyChallengeWins++;
+      if (gsm.dailyChallengeWins >= 3) gsm.unlockAchievement('daily_streak_3');
       if (activeDailyMods.some(m => m.id === 'wind')) gsm.unlockAchievement('wind_master');
       if (activeDailyMods.some(m => m.id === 'ghost_ball')) gsm.unlockAchievement('ghost_win');
     }
@@ -1673,6 +1881,46 @@ function endGame() {
   if (xpResult.newLevel) {
     setTimeout(() => showLevelUpNotification(xpResult.level), 1500);
   }
+
+  // Round 7: Victory celebration fireworks
+  if (playerWon) {
+    startVictoryCelebration();
+  }
+
+  // Round 7: XP 5000 achievement
+  if (gsm.totalXP >= 5000) gsm.unlockAchievement('xp_5000');
+
+  // Round 7: No-smash win
+  if (playerWon && gsm.smashes === 0 && (gsm.mode === 'match' || gsm.mode === 'quick')) {
+    gsm.unlockAchievement('no_smash_win');
+  }
+
+  // Round 7: Ace-only set
+  if (gsm.aces >= 5) gsm.unlockAchievement('ace_only_set');
+
+  // Round 7: Match history entry
+  const matchDuration = Math.round(performance.now() / 1000 - matchStartTime);
+  const opponentName = gsm.mode === 'season'
+    ? (SEASON_OPPONENTS[gsm.seasonRound - 1]?.name ?? 'AI')
+    : gsm.mode === 'tournament'
+      ? (gsm.tournamentResults[gsm.tournamentRound - 1]?.opponentName ?? 'AI')
+      : DIFFICULTIES[gsm.difficulty].name;
+  gsm.addMatchHistory({
+    mode: gsm.mode,
+    difficulty: DIFFICULTIES[gsm.difficulty].name,
+    opponent: opponentName,
+    playerScore: gsm.playerScore,
+    aiScore: gsm.aiScore,
+    playerSets: gsm.playerSets,
+    aiSets: gsm.aiSets,
+    won: playerWon,
+    aces: gsm.aces,
+    smashes: gsm.smashes,
+    bestRally: gsm.bestRally,
+    xpEarned: xpEarned,
+    date: new Date().toLocaleDateString(),
+    duration: matchDuration,
+  });
 
   ball.active = false;
   ballMesh.visible = false;
@@ -1820,6 +2068,9 @@ function setCameraMode(mode: CameraMode) {
   const doc = getDoc('camera');
   const modeInfo = CAMERA_MODES.find(m => m.id === mode);
   setText(doc, 'cam-mode', modeInfo?.name ?? 'DEFAULT');
+  // Round 7: Track camera modes used
+  camerasUsedThisMatch.add(mode);
+  if (camerasUsedThisMatch.size >= 5) gsm.unlockAchievement('all_cameras');
 }
 
 function updateCamera(dt: number) {
@@ -2016,6 +2267,12 @@ function update(dt: number) {
 
   // Round 6: Level-up notification
   updateLevelUp(realDt);
+
+  // Round 7: Victory celebration
+  updateVictoryCelebration(realDt);
+
+  // Round 7: Ball reflection
+  updateBallReflection();
 
   // Toast timer
   if (toastTimer > 0) {
@@ -2341,6 +2598,20 @@ function handleInput(dt: number) {
   // Round 4: Manual replay trigger (R key)
   if (keyboard.getKeyDown('KeyR') && !gsm.replayPlaying && gsm.state === 'playing') {
     triggerReplay();
+  }
+
+  // Round 7: Quick restart (Q key from game over)
+  if (keyboard.getKeyDown('KeyQ') && gsm.state === 'gameover') {
+    consecutiveRematches++;
+    if (consecutiveRematches >= 3) gsm.unlockAchievement('quick_rematch');
+    audio.playClick();
+    if (gsm.mode === 'tournament') {
+      showUI('tournament_bracket');
+    } else if (gsm.mode === 'season') {
+      showUI('season');
+    } else {
+      startGame(gsm.difficulty);
+    }
   }
 
   if (rightGamepad?.getButtonDown?.(4)) {
@@ -2825,6 +3096,8 @@ function scorePoint(winner: 'player' | 'ai', reason: string) {
   // Deuce achievement
   if (gsm.playerScore >= 10 && gsm.aiScore >= 10 && winner === 'player') {
     gsm.unlockAchievement('deuce_win');
+    gsm.deuceSetWins++;
+    if (gsm.deuceSetWins >= 5) gsm.unlockAchievement('deuce_master');
   }
 
   setTimeout(() => { if (gsm.state === 'playing') serveBall(); }, 1500);
@@ -2960,6 +3233,9 @@ function updateVisuals(dt: number) {
     spawnWindParticle();
   }
   updateWindParticles(dt);
+
+  // Round 7: Paddle trail
+  updatePaddleTrail();
 }
 
 function spawnWindParticle() {

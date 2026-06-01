@@ -215,6 +215,38 @@
           "class": "btn-row"
         },
         "dataUid": "uid-14"
+      },
+      {
+        "type": "container",
+        "sourceTag": "div",
+        "children": [
+          {
+            "type": "container",
+            "sourceTag": "div",
+            "children": [
+              {
+                "sourceTag": "span",
+                "type": "custom",
+                "children": [
+                  "HISTORY"
+                ],
+                "properties": {
+                  "class": "btn-small-text"
+                },
+                "dataUid": "uid-23"
+              }
+            ],
+            "properties": {
+              "id": "btn-history",
+              "class": "btn-small"
+            },
+            "dataUid": "uid-22"
+          }
+        ],
+        "properties": {
+          "class": "btn-row"
+        },
+        "dataUid": "uid-21"
       }
     ],
     "properties": {
@@ -395,7 +427,7 @@
         "column": 0
       },
       "end": {
-        "line": 85,
+        "line": 88,
         "column": 6
       }
     },
@@ -587,6 +619,36 @@
       "end": {
         "line": 83,
         "column": 89
+      }
+    },
+    "uid-21": {
+      "start": {
+        "line": 85,
+        "column": 2
+      },
+      "end": {
+        "line": 87,
+        "column": 8
+      }
+    },
+    "uid-22": {
+      "start": {
+        "line": 86,
+        "column": 4
+      },
+      "end": {
+        "line": 86,
+        "column": 93
+      }
+    },
+    "uid-23": {
+      "start": {
+        "line": 86,
+        "column": 44
+      },
+      "end": {
+        "line": 86,
+        "column": 87
       }
     }
   }

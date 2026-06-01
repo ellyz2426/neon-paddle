@@ -146,12 +146,48 @@ export const AI_TAUNTS: AITaunt[] = [
   { opponentName: 'ZENITH', onGameStart: ['The summit awaits.', 'Prove yourself.'], onAIScores: ['As expected.', 'Perfection.'], onPlayerScores: ['...Worthy.', 'Remarkable.'], onAIWinning: ['The peak is mine.', 'Untouchable.'], onPlayerWinning: ['You challenge the peak?', 'Incredible.'], onDeuce: ['At the summit together.', 'A true rival.'], onMatchPoint: ['The final step.', 'Ascend or fall.'] },
 ];
 
+// === MATCH HISTORY ===
+export interface MatchHistoryEntry {
+  mode: string;
+  difficulty: string;
+  opponent: string;
+  playerScore: number;
+  aiScore: number;
+  playerSets: number;
+  aiSets: number;
+  won: boolean;
+  aces: number;
+  smashes: number;
+  bestRally: number;
+  xpEarned: number;
+  date: string;
+  duration: number; // seconds
+}
+
+// === COLORBLIND MODE ===
+export type ColorblindMode = 'none' | 'deuteranopia' | 'protanopia' | 'tritanopia';
+
+export const COLORBLIND_MODES: { id: ColorblindMode; name: string; description: string }[] = [
+  { id: 'none', name: 'NORMAL', description: 'Standard colors' },
+  { id: 'deuteranopia', name: 'DEUTERANOPIA', description: 'Red-green (most common)' },
+  { id: 'protanopia', name: 'PROTANOPIA', description: 'Red-blind' },
+  { id: 'tritanopia', name: 'TRITANOPIA', description: 'Blue-yellow' },
+];
+
+// Colorblind-safe palettes: override accent, highlight, paddle, aiPaddle
+export const COLORBLIND_OVERRIDES: Record<ColorblindMode, { accent: number; highlight: number; ball: number; paddle: number; aiPaddle: number } | null> = {
+  none: null,
+  deuteranopia: { accent: 0x56b4e9, highlight: 0xe69f00, ball: 0xffffff, paddle: 0x56b4e9, aiPaddle: 0xe69f00 },
+  protanopia: { accent: 0x0072b2, highlight: 0xd55e00, ball: 0xffffff, paddle: 0x0072b2, aiPaddle: 0xd55e00 },
+  tritanopia: { accent: 0xcc79a7, highlight: 0x009e73, ball: 0xffffff, paddle: 0xcc79a7, aiPaddle: 0x009e73 },
+};
+
 // === GAME STATES ===
 export type GameState = 'title' | 'modeselect' | 'difficulty' | 'playing' | 'paused' | 'gameover'
   | 'leaderboard' | 'achievements' | 'settings' | 'help' | 'stats' | 'countdown'
   | 'serve_practice' | 'rally_practice' | 'tournament' | 'tournament_bracket'
   | 'drills' | 'drill_active' | 'daily_challenge' | 'tutorial' | 'replay'
-  | 'season' | 'season_standings' | 'analysis';
+  | 'season' | 'season_standings' | 'analysis' | 'match_history';
 
 // === DAILY CHALLENGE MODIFIERS ===
 export interface DailyModifier {
@@ -407,6 +443,15 @@ export function getDefaultAchievements(): Achievement[] {
     { id: 'first_unlock', name: 'New Gear', description: 'Unlock your first item via leveling', unlocked: false },
     { id: 'all_unlocks', name: 'Fully Loaded', description: 'Unlock all level-gated items', unlocked: false },
     { id: 'taunt_back', name: 'Shut Them Up', description: 'Win a season match after getting taunted 5+ times', unlocked: false },
+    // Round 7: Quality of life and polish (8)
+    { id: 'quick_rematch', name: 'One More!', description: 'Play 3 consecutive rematches', unlocked: false },
+    { id: 'deuce_master', name: 'Deuce Master', description: 'Win 5 deuce sets total', unlocked: false },
+    { id: 'daily_streak_3', name: 'Daily Devotee', description: 'Win 3 Daily Challenges', unlocked: false },
+    { id: 'no_smash_win', name: 'Patience Pays', description: 'Win a match with 0 smashes', unlocked: false },
+    { id: 'ace_only_set', name: 'Service Game', description: 'Score 5+ aces in a single set', unlocked: false },
+    { id: 'xp_5000', name: 'XP Legend', description: 'Earn 5000 total XP', unlocked: false },
+    { id: 'season_rematch', name: 'Revenge', description: 'Beat a Season opponent you previously lost to', unlocked: false },
+    { id: 'all_cameras', name: 'Director', description: 'Try all 5 camera modes in one match', unlocked: false },
   ];
 }
 
@@ -632,6 +677,19 @@ export class GameStateManager {
   tauntsReceivedThisMatch: number = 0;
   tauntCooldown: number = 0; // prevent spam
 
+  // Round 7: Match history
+  matchHistory: MatchHistoryEntry[] = [];
+
+  // Round 7: Colorblind mode
+  colorblindMode: ColorblindMode = 'none';
+
+  // Round 7: Tracking
+  dailyChallengeWins: number = 0;
+  deuceSetWins: number = 0;
+  consecutiveRematchCount: number = 0;
+  camerasUsed: Set<string> = new Set();
+  seasonPreviousResults: Record<string, boolean> = {}; // opponent name -> last result
+
   achievements: Achievement[] = getDefaultAchievements();
   leaderboard: { score: string; mode: string; difficulty: string; date: string }[] = [];
 
@@ -673,6 +731,12 @@ export class GameStateManager {
         if (data.ballSkinsUsed) this.ballSkinsUsed = new Set(data.ballSkinsUsed);
         // Round 6: XP
         this.totalXP = data.totalXP ?? 0;
+        // Round 7
+        if (data.matchHistory) this.matchHistory = data.matchHistory;
+        this.colorblindMode = data.colorblindMode ?? 'none';
+        this.dailyChallengeWins = data.dailyChallengeWins ?? 0;
+        this.deuceSetWins = data.deuceSetWins ?? 0;
+        if (data.seasonPreviousResults) this.seasonPreviousResults = data.seasonPreviousResults;
       }
     } catch { /* ignore */ }
   }
@@ -703,6 +767,11 @@ export class GameStateManager {
         seasonBestRun: this.seasonBestRun,
         ballSkinsUsed: [...this.ballSkinsUsed],
         totalXP: this.totalXP,
+        matchHistory: this.matchHistory.slice(0, 20),
+        colorblindMode: this.colorblindMode,
+        dailyChallengeWins: this.dailyChallengeWins,
+        deuceSetWins: this.deuceSetWins,
+        seasonPreviousResults: this.seasonPreviousResults,
       }));
     } catch { /* ignore */ }
   }
@@ -1080,5 +1149,25 @@ export class GameStateManager {
   resetMatchTaunts() {
     this.tauntsReceivedThisMatch = 0;
     this.tauntCooldown = 0;
+  }
+
+  // Round 7: Match history
+  addMatchHistory(entry: MatchHistoryEntry) {
+    this.matchHistory.unshift(entry);
+    this.matchHistory = this.matchHistory.slice(0, 20);
+    this.savePersistence();
+  }
+
+  // Round 7: Get effective theme colors (applies colorblind overrides)
+  getEffectiveTheme(): Theme & { effectiveAccent: number; effectiveHighlight: number; effectivePaddle: number; effectiveAIPaddle: number } {
+    const theme = this.getTheme();
+    const override = COLORBLIND_OVERRIDES[this.colorblindMode];
+    return {
+      ...theme,
+      effectiveAccent: override ? override.accent : theme.accent,
+      effectiveHighlight: override ? override.highlight : theme.highlight,
+      effectivePaddle: override ? override.paddle : theme.paddle,
+      effectiveAIPaddle: override ? override.aiPaddle : theme.aiPaddle,
+    };
   }
 }

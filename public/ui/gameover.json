@@ -151,6 +151,22 @@
           "class": "go-btn"
         },
         "dataUid": "uid-12"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "Press Q for quick rematch"
+        ],
+        "properties": {
+          "class": "go-stat",
+          "style": {
+            "fontSize": "0.9",
+            "color": "#666",
+            "marginTop": "0.5"
+          }
+        },
+        "dataUid": "uid-14"
       }
     ],
     "properties": {
@@ -304,7 +320,7 @@
         "column": 0
       },
       "end": {
-        "line": 66,
+        "line": 67,
         "column": 6
       }
     },
@@ -426,6 +442,16 @@
       "end": {
         "line": 65,
         "column": 75
+      }
+    },
+    "uid-14": {
+      "start": {
+        "line": 66,
+        "column": 2
+      },
+      "end": {
+        "line": 66,
+        "column": 110
       }
     }
   }

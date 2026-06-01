@@ -1,0 +1,84 @@
+<style>
+  .history-panel {
+    display: flex;
+    flex-direction: column;
+    padding: 2;
+    background-color: rgba(0, 0, 0, 0.92);
+    border-color: #00ffff;
+    border-width: 0.1;
+    border-radius: 1;
+    gap: 0.5;
+  }
+  .history-title {
+    font-size: 3;
+    color: #00ffff;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1;
+  }
+  .history-row {
+    display: flex;
+    flex-direction: row;
+    padding: 0.3;
+    gap: 0.5;
+    border-color: rgba(0, 255, 255, 0.15);
+    border-width: 0.05;
+    border-radius: 0.3;
+  }
+  .history-win {
+    background-color: rgba(0, 255, 100, 0.08);
+  }
+  .history-loss {
+    background-color: rgba(255, 50, 50, 0.08);
+  }
+  .history-mode {
+    font-size: 1.2;
+    color: #aaa;
+    min-width: 8;
+  }
+  .history-score {
+    font-size: 1.4;
+    color: #fff;
+    font-weight: bold;
+    min-width: 6;
+  }
+  .history-result {
+    font-size: 1.2;
+    color: #00ff66;
+    min-width: 4;
+  }
+  .history-detail {
+    font-size: 1;
+    color: #888;
+  }
+  .history-empty {
+    font-size: 1.6;
+    color: #666;
+    text-align: center;
+    padding: 3;
+  }
+  .btn-back {
+    font-size: 2;
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1;
+    border-radius: 0.5;
+    cursor: pointer;
+    text-align: center;
+    margin-top: 1;
+  }
+</style>
+<div class="history-panel">
+  <span class="history-title">MATCH HISTORY</span>
+  <div class="history-row history-win"><span id="mh-0" class="history-score"></span><span id="mh-detail-0" class="history-detail"></span></div>
+  <div class="history-row"><span id="mh-1" class="history-score"></span><span id="mh-detail-1" class="history-detail"></span></div>
+  <div class="history-row"><span id="mh-2" class="history-score"></span><span id="mh-detail-2" class="history-detail"></span></div>
+  <div class="history-row"><span id="mh-3" class="history-score"></span><span id="mh-detail-3" class="history-detail"></span></div>
+  <div class="history-row"><span id="mh-4" class="history-score"></span><span id="mh-detail-4" class="history-detail"></span></div>
+  <div class="history-row"><span id="mh-5" class="history-score"></span><span id="mh-detail-5" class="history-detail"></span></div>
+  <div class="history-row"><span id="mh-6" class="history-score"></span><span id="mh-detail-6" class="history-detail"></span></div>
+  <div class="history-row"><span id="mh-7" class="history-score"></span><span id="mh-detail-7" class="history-detail"></span></div>
+  <div class="history-row"><span id="mh-8" class="history-score"></span><span id="mh-detail-8" class="history-detail"></span></div>
+  <div class="history-row"><span id="mh-9" class="history-score"></span><span id="mh-detail-9" class="history-detail"></span></div>
+  <button id="btn-back-match_history" class="btn-back" cursor="pointer">BACK</button>
+</div>

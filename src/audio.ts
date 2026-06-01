@@ -539,4 +539,25 @@ export class AudioManager {
   playImpactRipple() {
     this.playTone(120, 'sine', 0.06, 0.04);
   }
+
+  // Round 7: Victory firework burst — sparkle pop
+  playVictoryBurst() {
+    this.ensureCtx();
+    const ctx = this.ctx!;
+    const baseFreq = 800 + Math.random() * 1200;
+    this.playTone(baseFreq, 'sine', 0.08, 0.08);
+    this.playNoise(0.06, 0.04, 6000 + Math.random() * 4000);
+    // Shimmer
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(baseFreq * 1.5, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.3, ctx.currentTime + 0.15);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.05, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+    osc.connect(g);
+    g.connect(this.sfxGain!);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.18);
+  }
 }
